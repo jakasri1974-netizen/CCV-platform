@@ -1,0 +1,33 @@
+{
+  "name": "blockcert-platform",
+  "version": "1.0.0",
+  "description": "Blockchain-Based Course & Credential Verification Platform",
+  "main": "server.js",
+  "scripts": {
+    "install:all": "npm install && cd blockchain && npm install && cd ../backend && npm install && cd ../frontend && npm install",
+    "compile:contracts": "cd blockchain && npx hardhat compile",
+    "test:contracts": "cd blockchain && npx hardhat test",
+    "deploy:local": "cd blockchain && npx hardhat run scripts/deploy.js --network localhost",
+    "node:local": "cd blockchain && npx hardhat node",
+    "seed:backend": "cd backend && node seed.js",
+    "start:backend": "cd backend && npm start",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\""
+  },
+  "keywords": [
+    "blockchain",
+    "polygon",
+    "ethereum",
+    "verification",
+    "certificates",
+    "hardhat",
+    "solidity",
+    "react"
+  ],
+  "author": "BlockCert",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
