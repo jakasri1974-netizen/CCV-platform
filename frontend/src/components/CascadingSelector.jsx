@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { collegeApi, departmentApi, courseApi, batchApi } from '../services/api';
-import { Building, Layers, BookOpen, Calendar, Filter, ChevronRight } from 'lucide-react';
+import SearchableSelect from './ui/SearchableSelect';
+import { Building, Layers, BookOpen, Calendar, Filter } from 'lucide-react';
 
 export default function CascadingSelector({
   selectedCollege,
@@ -153,24 +154,25 @@ export default function CascadingSelector({
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
         {/* 1. Select College */}
         <div className="relative">
-          <div className="flex items-center gap-2 bg-slate-900/90 border border-slate-700 rounded-2xl px-3 py-2 text-white shadow-inner">
-            <Building className="w-4 h-4 text-indigo-400 shrink-0" />
-            <select
-              value={selectedCollege?._id || ''}
-              disabled={isCollegeAdmin}
-              onChange={(e) => {
-                const found = colleges.find((c) => c._id === e.target.value);
-                setSelectedCollege(found || null);
-              }}
-              className="w-full bg-transparent text-white font-semibold focus:outline-none cursor-pointer disabled:opacity-80 disabled:cursor-not-allowed"
-            >
-              {colleges.map((c) => (
-                <option key={c._id} value={c._id} className="bg-slate-900 text-white">
-                  {c.collegeName}
-                </option>
-              ))}
-            </select>
-          </div>
+          <SearchableSelect
+            placeholder="Search college..."
+            icon={Building}
+            disabled={isCollegeAdmin}
+            dark
+            options={colleges.map((c) => ({
+              value: c._id,
+              label: c.collegeName,
+              subtitle: c.district || c.university || '',
+              searchTerms: `${c.collegeName} ${c.collegeCode || ''} ${c.district || ''}`,
+              original: c,
+            }))}
+            value={selectedCollege}
+            onChange={(opt) => {
+              setSelectedCollege(opt?.original || opt || null);
+            }}
+            typeToSearchText="Type college name (e.g. Nandha, Erode, Kongu)"
+            requireQueryToOpen={false}
+          />
         </div>
 
         {/* 2. Select Department */}
@@ -200,27 +202,24 @@ export default function CascadingSelector({
 
         {/* 3. Select Course */}
         <div className="relative">
-          <div className="flex items-center gap-2 bg-slate-900/90 border border-slate-700 rounded-2xl px-3 py-2 text-white shadow-inner">
-            <BookOpen className="w-4 h-4 text-amber-400 shrink-0" />
-            <select
-              value={selectedCourse?._id || ''}
-              onChange={(e) => {
-                const found = courses.find((c) => c._id === e.target.value);
-                setSelectedCourse(found || null);
-              }}
-              className="w-full bg-transparent text-white font-semibold focus:outline-none cursor-pointer"
-            >
-              {courses.length > 0 ? (
-                courses.map((c) => (
-                  <option key={c._id} value={c._id} className="bg-slate-900 text-white">
-                    {c.courseName}
-                  </option>
-                ))
-              ) : (
-                <option value="" className="bg-slate-900 text-slate-400">All Courses / Programs</option>
-              )}
-            </select>
-          </div>
+          <SearchableSelect
+            placeholder="Search course..."
+            icon={BookOpen}
+            dark
+            options={courses.map((c) => ({
+              value: c._id,
+              label: c.courseName || c.name,
+              subtitle: c.courseCode || c.degreeType || '',
+              searchTerms: `${c.courseName || c.name} ${c.courseCode || ''} ${c.degreeType || ''}`,
+              original: c,
+            }))}
+            value={selectedCourse}
+            onChange={(opt) => {
+              setSelectedCourse(opt?.original || opt || null);
+            }}
+            typeToSearchText="Type course name (e.g. CSE, IT, Information)"
+            requireQueryToOpen={false}
+          />
         </div>
 
         {/* 4. Select Batch */}

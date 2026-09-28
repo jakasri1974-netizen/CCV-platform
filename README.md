@@ -15,7 +15,7 @@
 * **Polygon PoS Smart Contract (`CredentialVerification.sol`)**: Stores immutable certificate IDs, SHA-256 canonical hashes, issuer addresses, timestamp, and validity state.
 * **Privacy Compliant**: Personal student information (name, email, phone) and PDF documents remain stored off-chain in database/local storage.
 * **Employer Public Verification (`/verify/:certificateId`)**: Zero friction credential verification for employers without needing MetaMask or cryptocurrency funds.
-* **MetaMask Web3 Integration**: Institution admins sign on-chain transactions for certificate issuance and revocation with gas estimation.
+* **Zero MetaMask Backend Signer**: Server-side blockchain transaction signing using backend RPC provider and private key for seamless admin, student, and employer usage.
 * **Off-Chain PDF & QR Generation**: Automatically produces downloadable certificate PDFs with embedded verification QR codes.
 * **Role-Based Authentication**: Separate portals for Institution Admins and Students with JWT authentication and bcrypt password hashing.
 * **Real-Time Analytics Dashboard**: Metrics cards, monthly issuance charts, recent activity logs, and Polygon node diagnostic tracking.
@@ -29,7 +29,7 @@
                   │ Institution Admin│
                   └────────┬─────────┘
                            │
-                     MetaMask Wallet
+                     REST API / JWT
                            │
                            ▼
                   ┌──────────────────┐
@@ -76,7 +76,6 @@ Read-Only RPC + Backend
 
 * Node.js (v18 or higher)
 * npm or yarn
-* MetaMask Browser Extension
 
 ### 1. Installation
 

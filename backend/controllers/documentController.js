@@ -155,6 +155,13 @@ const getStudentDocuments = async (req, res, next) => {
       return res.status(404).json({ success: false, message: "Student record not found" });
     }
 
+    // Student isolation check: student role can only view their own document records
+    if (req.user && req.user.role === "student") {
+      if (!req.user.studentRef || String(req.user.studentRef) !== String(student._id)) {
+        return res.status(403).json({ success: false, message: "Access forbidden. Students may only view their own academic documents." });
+      }
+    }
+
     let documents = await Document.find({ student: student._id, status: "ACTIVE" });
     documents = sortStudentDocuments(documents);
 

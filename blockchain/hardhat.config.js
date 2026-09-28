@@ -27,6 +27,11 @@ module.exports = {
       accounts: [PRIVATE_KEY],
       chainId: 80002,
     },
+    polygonAmoy: {
+      url: POLYGON_RPC_URL,
+      accounts: [PRIVATE_KEY],
+      chainId: 80002,
+    },
     polygon: {
       url: process.env.POLYGON_MAINNET_RPC_URL || "https://polygon-rpc.com",
       accounts: [PRIVATE_KEY],

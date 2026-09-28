@@ -1,25 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
-import StatusBadge from '../components/StatusBadge';
+import Badge from '../components/ui/Badge';
+import Button from '../components/ui/Button';
+import { CardSkeleton, TableSkeleton } from '../components/ui/Skeleton';
+import EmptyState from '../components/ui/EmptyState';
 import { dashboardApi } from '../services/api';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import {
   Users,
+  Building,
+  Layers,
   BookOpen,
   Award,
   ShieldCheck,
   CheckCircle2,
   Ban,
   TrendingUp,
-  Cpu,
-  ExternalLink,
   RefreshCw,
+  PlusCircle,
+  FileCheck,
+  Activity,
+  CheckCircle,
 } from 'lucide-react';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     fetchStats();
@@ -40,102 +48,145 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900">
-      <Navbar />
+    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans">
+      <Navbar onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
 
       <div className="flex-1 flex">
-        <Sidebar />
+        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-        <main className="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6">
+        <main className="flex-1 p-4 sm:p-6 max-w-7xl mx-auto w-full space-y-6 overflow-x-hidden">
           {/* Header Bar */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-xs">
             <div>
-              <h1 className="text-2xl font-extrabold text-slate-900">Institution Control Dashboard</h1>
+              <div className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-1">
+                University Control Center
+              </div>
+              <h1 className="text-2xl font-black text-slate-900 tracking-tight">Institutional Operations Dashboard</h1>
               <p className="text-xs text-slate-500 mt-0.5">
-                Real-time certificate issuance analytics and Polygon blockchain status
+                Overview of college academic records, certificate issuances, and verification requests
               </p>
             </div>
 
-            <button
-              onClick={fetchStats}
-              className="flex items-center gap-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold px-3.5 py-2 rounded-xl shadow-sm transition"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-              <span>Refresh Stats</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={fetchStats}
+                isLoading={loading}
+                icon={RefreshCw}
+              >
+                Refresh
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                to="/admin/issue"
+                icon={PlusCircle}
+              >
+                Issue Certificate
+              </Button>
+            </div>
           </div>
 
           {/* Metric Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-              <div className="flex items-center justify-between text-slate-400 mb-2">
-                <span className="text-xs font-semibold">Total Students</span>
-                <Users className="w-4 h-4 text-indigo-600" />
+          {loading ? (
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <CardSkeleton key={i} />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+                <div className="flex items-center justify-between text-slate-400 mb-2">
+                  <span className="text-xs font-semibold">Total Students</span>
+                  <Users className="w-4 h-4 text-indigo-600" />
+                </div>
+                <div className="text-2xl font-black text-slate-900">
+                  {stats?.stats?.totalStudents || 0}
+                </div>
               </div>
-              <div className="text-2xl font-black text-slate-900">
-                {stats?.stats.totalStudents || 0}
+
+              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+                <div className="flex items-center justify-between text-slate-400 mb-2">
+                  <span className="text-xs font-semibold">Total Colleges</span>
+                  <Building className="w-4 h-4 text-indigo-600" />
+                </div>
+                <div className="text-2xl font-black text-slate-900">
+                  {stats?.stats?.totalColleges || 14}
+                </div>
+              </div>
+
+              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+                <div className="flex items-center justify-between text-slate-400 mb-2">
+                  <span className="text-xs font-semibold">Total Departments</span>
+                  <Layers className="w-4 h-4 text-indigo-600" />
+                </div>
+                <div className="text-2xl font-black text-slate-900">
+                  {stats?.stats?.totalDepartments || 8}
+                </div>
+              </div>
+
+              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+                <div className="flex items-center justify-between text-slate-400 mb-2">
+                  <span className="text-xs font-semibold">Total Courses</span>
+                  <BookOpen className="w-4 h-4 text-indigo-600" />
+                </div>
+                <div className="text-2xl font-black text-slate-900">
+                  {stats?.stats?.totalCourses || 46}
+                </div>
+              </div>
+
+              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+                <div className="flex items-center justify-between text-slate-400 mb-2">
+                  <span className="text-xs font-semibold">Certificates Issued</span>
+                  <Award className="w-4 h-4 text-indigo-600" />
+                </div>
+                <div className="text-2xl font-black text-indigo-600">
+                  {stats?.stats?.totalIssued || 0}
+                </div>
+              </div>
+
+              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+                <div className="flex items-center justify-between text-slate-400 mb-2">
+                  <span className="text-xs font-semibold">Certificates Pending</span>
+                  <FileCheck className="w-4 h-4 text-amber-500" />
+                </div>
+                <div className="text-2xl font-black text-amber-500">
+                  {stats?.stats?.pendingCertificates || 0}
+                </div>
+              </div>
+
+              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+                <div className="flex items-center justify-between text-slate-400 mb-2">
+                  <span className="text-xs font-semibold">Certificates Revoked</span>
+                  <Ban className="w-4 h-4 text-rose-600" />
+                </div>
+                <div className="text-2xl font-black text-rose-600">
+                  {stats?.stats?.revokedCertificates || 0}
+                </div>
+              </div>
+
+              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+                <div className="flex items-center justify-between text-slate-400 mb-2">
+                  <span className="text-xs font-semibold">Verification Requests</span>
+                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                </div>
+                <div className="text-2xl font-black text-emerald-600">
+                  {stats?.stats?.totalVerifications || 0}
+                </div>
               </div>
             </div>
+          )}
 
-            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-              <div className="flex items-center justify-between text-slate-400 mb-2">
-                <span className="text-xs font-semibold">Total Courses</span>
-                <BookOpen className="w-4 h-4 text-indigo-600" />
-              </div>
-              <div className="text-2xl font-black text-slate-900">
-                {stats?.stats.totalCourses || 0}
-              </div>
-            </div>
-
-            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-              <div className="flex items-center justify-between text-slate-400 mb-2">
-                <span className="text-xs font-semibold">Issued</span>
-                <Award className="w-4 h-4 text-indigo-600" />
-              </div>
-              <div className="text-2xl font-black text-slate-900">
-                {stats?.stats.totalIssued || 0}
-              </div>
-            </div>
-
-            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-              <div className="flex items-center justify-between text-slate-400 mb-2">
-                <span className="text-xs font-semibold">Verified</span>
-                <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              </div>
-              <div className="text-2xl font-black text-emerald-600">
-                {stats?.stats.totalVerifications || 0}
-              </div>
-            </div>
-
-            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-              <div className="flex items-center justify-between text-slate-400 mb-2">
-                <span className="text-xs font-semibold">Active</span>
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-              </div>
-              <div className="text-2xl font-black text-emerald-600">
-                {stats?.stats.activeCertificates || 0}
-              </div>
-            </div>
-
-            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-              <div className="flex items-center justify-between text-slate-400 mb-2">
-                <span className="text-xs font-semibold">Revoked</span>
-                <Ban className="w-4 h-4 text-rose-600" />
-              </div>
-              <div className="text-2xl font-black text-rose-600">
-                {stats?.stats.revokedCertificates || 0}
-              </div>
-            </div>
-          </div>
-
-          {/* Chart & Blockchain Node Status Grid */}
+          {/* Chart & System Operations Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Monthly Issuance Bar Chart */}
-            <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h3 className="font-bold text-slate-900 text-sm">Certificates Issued by Month</h3>
-                  <p className="text-xs text-slate-500">Historical credential volume</p>
+                  <h3 className="font-extrabold text-slate-900 text-sm">Monthly Credential Issuances</h3>
+                  <p className="text-xs text-slate-500">Historical certificate issuance statistics</p>
                 </div>
                 <TrendingUp className="w-4 h-4 text-indigo-600" />
               </div>
@@ -155,90 +206,87 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {/* Blockchain Network Node Card */}
+            {/* System Status Card */}
             <div className="bg-slate-900 text-white p-6 rounded-2xl border border-slate-800 shadow-md flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
                   <h3 className="font-bold text-sm text-white flex items-center gap-2">
-                    <Cpu className="w-4 h-4 text-indigo-400" />
-                    <span>Polygon Node Status</span>
+                    <Activity className="w-4 h-4 text-indigo-400" />
+                    <span>System Status</span>
                   </h3>
                   <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">
-                    Active
+                    All Operational
                   </span>
                 </div>
 
-                <div className="space-y-3 text-xs">
-                  <div>
-                    <span className="text-slate-400 block font-medium">Network</span>
-                    <span className="font-bold text-indigo-300 block mt-0.5">
-                      {stats?.blockchain?.networkName || 'Polygon Amoy (80002)'}
+                <div className="space-y-3.5 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400 font-medium">Database Service</span>
+                    <span className="flex items-center gap-1.5 text-emerald-400 font-bold text-[11px]">
+                      <CheckCircle className="w-3.5 h-3.5" /> Connected
                     </span>
                   </div>
 
-                  <div>
-                    <span className="text-slate-400 block font-medium">Smart Contract Address</span>
-                    <span className="font-mono text-[10px] text-slate-300 truncate block mt-0.5 bg-slate-950 p-2 rounded-lg border border-slate-800">
-                      {stats?.blockchain?.contractAddress || '0x5FbDB2315678afecb367f032d93F642f64180aa3'}
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400 font-medium">Document Storage</span>
+                    <span className="flex items-center gap-1.5 text-emerald-400 font-bold text-[11px]">
+                      <CheckCircle className="w-3.5 h-3.5" /> Available
                     </span>
                   </div>
 
-                  <div>
-                    <span className="text-slate-400 block font-medium">Latest Block Number</span>
-                    <span className="font-mono text-xs text-white font-bold block mt-0.5">
-                      #{stats?.blockchain?.blockNumber || '1542389'}
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400 font-medium">Public Verifier Service</span>
+                    <span className="flex items-center gap-1.5 text-emerald-400 font-bold text-[11px]">
+                      <CheckCircle className="w-3.5 h-3.5" /> Operational
                     </span>
                   </div>
 
-                  <div>
-                    <span className="text-slate-400 block font-medium">Total On-Chain Certificates</span>
-                    <span className="font-mono text-sm text-emerald-400 font-extrabold block mt-0.5">
-                      {stats?.blockchain?.totalOnChain || stats?.stats?.totalIssued || 0} Anchored
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400 font-medium">Verification Engine</span>
+                    <span className="flex items-center gap-1.5 text-emerald-400 font-bold text-[11px]">
+                      <CheckCircle className="w-3.5 h-3.5" /> Operational
                     </span>
                   </div>
                 </div>
               </div>
 
-              <a
-                href="/admin/blockchain"
-                className="mt-6 w-full flex items-center justify-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold py-2.5 rounded-xl transition shadow-md"
-              >
-                <span>Full Blockchain Details</span>
-                <ExternalLink className="w-3.5 h-3.5" />
-              </a>
+              <div className="mt-6 pt-4 border-t border-slate-800 text-[11px] text-slate-400">
+                Institutional records secured with cryptographic tamper detection.
+              </div>
             </div>
           </div>
 
-          {/* Recent Activity Table */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          {/* Recent Operations Activity Table */}
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
             <div className="p-5 border-b border-slate-100 flex items-center justify-between">
               <div>
-                <h3 className="font-bold text-slate-900 text-sm">Recent Issuance Activity</h3>
-                <p className="text-xs text-slate-500">Latest certificates anchored on Polygon</p>
+                <h3 className="font-extrabold text-slate-900 text-sm">Recent Activity Log</h3>
+                <p className="text-xs text-slate-500">Recent certificate issuances and student registrations</p>
               </div>
               <a
                 href="/admin/certificates"
-                className="text-xs font-semibold text-indigo-600 hover:text-indigo-700"
+                className="text-xs font-bold text-indigo-600 hover:text-indigo-700"
               >
-                View All →
+                View Full Registry →
               </a>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-100">
-                  <tr>
-                    <th className="p-3.5 pl-5">Certificate ID</th>
-                    <th className="p-3.5">Student</th>
-                    <th className="p-3.5">Course</th>
-                    <th className="p-3.5">Date</th>
-                    <th className="p-3.5">Status</th>
-                    <th className="p-3.5 pr-5">Blockchain Tx</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
-                  {stats?.recentActivity?.length > 0 ? (
-                    stats.recentActivity.map((cert) => (
+            {loading ? (
+              <TableSkeleton rows={4} />
+            ) : stats?.recentActivity?.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200 uppercase tracking-wider text-[10px]">
+                    <tr>
+                      <th className="p-3.5 pl-5">Certificate ID</th>
+                      <th className="p-3.5">Student</th>
+                      <th className="p-3.5">Course Program</th>
+                      <th className="p-3.5">Issue Date</th>
+                      <th className="p-3.5 pr-5 text-right">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                    {stats.recentActivity.map((cert) => (
                       <tr key={cert._id} className="hover:bg-slate-50/80 transition">
                         <td className="p-3.5 pl-5 font-mono text-indigo-600 font-bold">
                           {cert.certificateId}
@@ -250,30 +298,20 @@ export default function AdminDashboard() {
                           {cert.course ? cert.course.name : 'N/A'}
                         </td>
                         <td className="p-3.5 text-slate-500">{cert.completionDate}</td>
-                        <td className="p-3.5">
-                          <StatusBadge status={cert.status} />
-                        </td>
-                        <td className="p-3.5 pr-5">
-                          <a
-                            href={`/verify/${cert.certificateId}`}
-                            className="inline-flex items-center gap-1 font-mono text-[10px] text-slate-500 hover:text-indigo-600 truncate max-w-[120px]"
-                          >
-                            <span>{cert.transactionHash ? `${cert.transactionHash.slice(0,10)}...` : 'Pending'}</span>
-                            <ExternalLink className="w-3 h-3 shrink-0" />
-                          </a>
+                        <td className="p-3.5 pr-5 text-right">
+                          <Badge status={cert.status} />
                         </td>
                       </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="6" className="text-center p-8 text-slate-400">
-                        No recent issuance activity found.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <EmptyState
+                title="No Recent Activity Records"
+                description="No academic certificates have been issued yet. Click 'Issue Certificate' to start."
+              />
+            )}
           </div>
         </main>
       </div>

@@ -15,8 +15,8 @@ router.use(protect);
 router.get("/", getCertificates);
 router.get("/:id", getCertificateById);
 
-router.post("/prepare", authorize("admin"), prepareIssuance);
-router.post("/confirm", authorize("admin"), confirmIssuance);
-router.post("/:id/revoke", authorize("admin"), revokeCertificate);
+router.post("/prepare", authorize("admin", "college_admin", "super_admin"), prepareIssuance);
+router.post("/confirm", authorize("admin", "college_admin", "super_admin"), confirmIssuance);
+router.post("/:id/revoke", authorize("admin", "college_admin", "super_admin"), revokeCertificate);
 
 module.exports = router;

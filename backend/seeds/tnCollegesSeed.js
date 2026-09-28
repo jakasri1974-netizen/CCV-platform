@@ -8,182 +8,250 @@ const Department = require("../models/Department");
 const Course = require("../models/Course");
 const Batch = require("../models/Batch");
 const Student = require("../models/Student");
+const User = require("../models/User");
 
 async function seedTamilNaduColleges() {
   console.log("====================================================");
-  console.log("🏫 SEEDING TAMIL NADU MASTER COLLEGES DATASET");
+  console.log("🏫 SEEDING TAMIL NADU MASTER COLLEGES & COURSES DATASET");
   console.log("====================================================");
 
   await connectDB();
 
-  console.log("Clearing existing master colleges dataset...");
+  console.log("Clearing existing master dataset & user accounts...");
   await College.deleteMany({});
   await Department.deleteMany({});
   await Course.deleteMany({});
   await Batch.deleteMany({});
   await Student.deleteMany({});
+  await User.deleteMany({});
 
   const collegesMasterList = [
     {
-      collegeId: "COL-CEG-AU",
-      collegeCode: "1001",
-      collegeName: "College of Engineering Guindy (CEG), Anna University",
+      collegeId: "COL-ACET",
+      collegeCode: "7301",
+      collegeName: "Aishwarya College of Engineering and Technology",
       state: "Tamil Nadu",
-      district: "Chennai",
+      district: "Erode",
       university: "Anna University",
-      address: "Sardar Patel Road, Guindy, Chennai - 600025",
-      location: "Guindy Campus",
+      address: "Errappanaickenpalayam, Kathirampatti, Erode - 638107",
     },
     {
-      collegeId: "COL-MIT-AU",
-      collegeCode: "1002",
-      collegeName: "Madras Institute of Technology (MIT), Anna University",
+      collegeId: "COL-ALAMEEN",
+      collegeCode: "7303",
+      collegeName: "Al-Ameen Engineering College",
       state: "Tamil Nadu",
-      district: "Chengalpattu",
+      district: "Erode",
       university: "Anna University",
-      address: "Chromepet, Chennai - 600044",
-      location: "Chromepet Campus",
+      address: "Karundevampalayam, Nanjai Uttukuli, Erode - 638104",
     },
     {
-      collegeId: "COL-GCT-CBE",
-      collegeCode: "2001",
-      collegeName: "Government College of Technology (GCT)",
+      collegeId: "COL-BIT",
+      collegeCode: "7304",
+      collegeName: "Bannari Amman Institute of Technology",
       state: "Tamil Nadu",
-      district: "Coimbatore",
+      district: "Erode",
+      university: "Anna University (Autonomous)",
+      address: "Alathukombai Post, Sathyamangalam, Erode - 638401",
+    },
+    {
+      collegeId: "COL-ESEC",
+      collegeCode: "7308",
+      collegeName: "Erode Sengunthar Engineering College",
+      state: "Tamil Nadu",
+      district: "Erode",
+      university: "Anna University (Autonomous)",
+      address: "Thudupathi, Perundurai, Erode - 638057",
+    },
+    {
+      collegeId: "COL-GCEE",
+      collegeCode: "7311",
+      collegeName: "Government College of Engineering, Erode",
+      state: "Tamil Nadu",
+      district: "Erode",
       university: "Anna University",
-      address: "Thadagam Road, Coimbatore - 641013",
-      location: "Coimbatore Campus",
+      address: "Vasavi College Post, Erode - 638316",
     },
     {
-      collegeId: "COL-PSG-TECH",
-      collegeCode: "2004",
-      collegeName: "PSG College of Technology",
+      collegeId: "COL-JKKM",
+      collegeCode: "7313",
+      collegeName: "J.K.K. Munirajah College of Technology",
       state: "Tamil Nadu",
-      district: "Coimbatore",
+      district: "Erode",
       university: "Anna University",
-      address: "Avinashi Road, Peelamedu, Coimbatore - 641004",
-      location: "Peelamedu Campus",
+      address: "T.N.Palayam, Gobi, Erode - 638506",
     },
     {
-      collegeId: "COL-CIT-CBE",
-      collegeCode: "2006",
-      collegeName: "Coimbatore Institute of Technology (CIT)",
+      collegeId: "COL-KONGU",
+      collegeCode: "7314",
+      collegeName: "Kongu Engineering College",
       state: "Tamil Nadu",
-      district: "Coimbatore",
+      district: "Erode",
+      university: "Anna University (Autonomous)",
+      address: "Perundurai, Erode - 638060",
+    },
+    {
+      collegeId: "COL-MPNMJ",
+      collegeCode: "7317",
+      collegeName: "M.P. Nachimuthu M. Jaganathan Engineering College",
+      state: "Tamil Nadu",
+      district: "Erode",
       university: "Anna University",
-      address: "Civil Aerodrome Post, Coimbatore - 641014",
-      location: "Avinashi Road Campus",
+      address: "Chennimalai, Erode - 638112",
     },
     {
-      collegeId: "COL-TCE-MDU",
-      collegeCode: "5008",
-      collegeName: "Thiagarajar College of Engineering (TCE)",
+      collegeId: "COL-NCT",
+      collegeCode: "7322",
+      collegeName: "Nandha College of Technology",
       state: "Tamil Nadu",
-      district: "Madurai",
+      district: "Erode",
       university: "Anna University",
-      address: "Thiruparankundram, Madurai - 625015",
-      location: "Madurai Campus",
+      address: "Vaikaalmedu, Erode - 638052",
     },
     {
-      collegeId: "COL-SSN-CHE",
-      collegeCode: "1315",
-      collegeName: "Sri Sivasubramaniya Nadar (SSN) College of Engineering",
+      collegeId: "COL-NEC",
+      collegeCode: "7323",
+      collegeName: "Nandha Engineering College",
       state: "Tamil Nadu",
-      district: "Chengalpattu",
+      district: "Erode",
+      university: "Anna University (Autonomous)",
+      address: "Pitchandampalayam, Erode - 638052",
+    },
+    {
+      collegeId: "COL-SVHEC",
+      collegeCode: "7329",
+      collegeName: "Shree Venkateshwara Hi-Tech Engineering College",
+      state: "Tamil Nadu",
+      district: "Erode",
       university: "Anna University",
-      address: "Old Mahabalipuram Road, Kalavakkam - 603110",
-      location: "OMR Campus",
+      address: "Othakudirai, Gobichettipalayam, Erode - 638455",
     },
     {
-      collegeId: "COL-GCE-SLM",
-      collegeCode: "2601",
-      collegeName: "Government College of Engineering",
+      collegeId: "COL-SEC",
+      collegeCode: "7332",
+      collegeName: "Surya Engineering College",
       state: "Tamil Nadu",
-      district: "Salem",
+      district: "Erode",
       university: "Anna University",
-      address: "NH 44, Karuppur, Salem - 636011",
-      location: "Salem Campus",
+      address: "Kathirampatti, Erode - 638107",
     },
     {
-      collegeId: "COL-VIT-VEL",
-      collegeCode: "VIT01",
-      collegeName: "Vellore Institute of Technology (VIT)",
+      collegeId: "COL-VCET",
+      collegeCode: "7335",
+      collegeName: "Velalar College of Engineering and Technology",
       state: "Tamil Nadu",
-      district: "Vellore",
-      university: "VIT Deemed University",
-      address: "Katpadi - Thiruvalam Road, Vellore - 632014",
-      location: "Vellore Campus",
+      district: "Erode",
+      university: "Anna University (Autonomous)",
+      address: "Thindal, Erode - 638012",
     },
     {
-      collegeId: "COL-SRM-KTR",
-      collegeCode: "SRM01",
-      collegeName: "SRM Institute of Science and Technology",
+      collegeId: "COL-HCE",
+      collegeCode: "7338",
+      collegeName: "Hindusthan College of Engineering, Chennimalai/Ingur",
       state: "Tamil Nadu",
-      district: "Chengalpattu",
-      university: "SRM Deemed University",
-      address: "Kattankulathur - 603203",
-      location: "Kattankulathur Campus",
-    },
-    {
-      collegeId: "COL-SASTRA",
-      collegeCode: "SASTRA01",
-      collegeName: "SASTRA Deemed University",
-      state: "Tamil Nadu",
-      district: "Thanjavur",
-      university: "SASTRA Deemed University",
-      address: "Tirumalaisamudram, Thanjavur - 613401",
-      location: "Thanjavur Campus",
-    },
-    {
-      collegeId: "COL-ACGCET",
-      collegeCode: "5002",
-      collegeName: "Alagappa Chettiar Government College of Engineering & Technology",
-      state: "Tamil Nadu",
-      district: "Sivaganga",
+      district: "Erode",
       university: "Anna University",
-      address: "College Road, Karaikudi - 630003",
-      location: "Karaikudi Campus",
+      address: "Chennimalai/Ingur, Erode - 638052",
     },
   ];
 
   const createdColleges = await College.insertMany(collegesMasterList);
-  console.log(`✅ Seeded ${createdColleges.length} Tamil Nadu master colleges.`);
+  console.log(`✅ Seeded ${createdColleges.length} master colleges.`);
 
-  // Create Departments for CEG Anna University & GCT Coimbatore
-  const cegCollege = createdColleges[0];
-  const deptsCEG = [
-    { departmentId: "DEP-CEG-CSE", college: cegCollege._id, departmentCode: "CSE", departmentName: "Computer Science and Engineering" },
-    { departmentId: "DEP-CEG-ECE", college: cegCollege._id, departmentCode: "ECE", departmentName: "Electronics and Communication Engineering" },
-    { departmentId: "DEP-CEG-EEE", college: cegCollege._id, departmentCode: "EEE", departmentName: "Electrical and Electronics Engineering" },
-    { departmentId: "DEP-CEG-MECH", college: cegCollege._id, departmentCode: "MECH", departmentName: "Mechanical Engineering" },
-    { departmentId: "DEP-CEG-CIVIL", college: cegCollege._id, departmentCode: "CIVIL", departmentName: "Civil Engineering" },
-    { departmentId: "DEP-CEG-AIDS", college: cegCollege._id, departmentCode: "AIDS", departmentName: "Artificial Intelligence & Data Science" },
+  const konguCollege = createdColleges.find((c) => c.collegeId === "COL-KONGU") || createdColleges[0];
+
+  // Seed Departments for Primary College
+  const deptsList = [
+    { departmentId: "DEP-CSE", college: konguCollege._id, departmentCode: "CSE", departmentName: "Computer Science and Engineering" },
+    { departmentId: "DEP-IT", college: konguCollege._id, departmentCode: "IT", departmentName: "Information Technology" },
+    { departmentId: "DEP-AIDS", college: konguCollege._id, departmentCode: "AIDS", departmentName: "Artificial Intelligence and Data Science" },
+    { departmentId: "DEP-ECE", college: konguCollege._id, departmentCode: "ECE", departmentName: "Electronics and Communication Engineering" },
+    { departmentId: "DEP-EEE", college: konguCollege._id, departmentCode: "EEE", departmentName: "Electrical and Electronics Engineering" },
+    { departmentId: "DEP-MECH", college: konguCollege._id, departmentCode: "MECH", departmentName: "Mechanical Engineering" },
+    { departmentId: "DEP-CIVIL", college: konguCollege._id, departmentCode: "CIVIL", departmentName: "Civil Engineering" },
+    { departmentId: "DEP-CHEM", college: konguCollege._id, departmentCode: "CHEM", departmentName: "Chemical Engineering" },
   ];
-  const createdDepts = await Department.insertMany(deptsCEG);
+  const createdDepts = await Department.insertMany(deptsList);
   const cseDept = createdDepts[0];
-  console.log(`✅ Seeded ${createdDepts.length} departments for ${cegCollege.collegeName}.`);
+  console.log(`✅ Seeded ${createdDepts.length} departments for ${konguCollege.collegeName}.`);
 
-  // Create Courses for CSE Department
-  const coursesCSE = [
-    { courseId: "CRS-CEG-BECSE", college: cegCollege._id, department: cseDept._id, courseCode: "BE-CSE", courseName: "B.E Computer Science and Engineering", degreeType: "B.E", duration: "4 Years", credits: 160 },
-    { courseId: "CRS-CEG-BTAIDS", college: cegCollege._id, department: cseDept._id, courseCode: "BT-AIDS", courseName: "B.Tech Artificial Intelligence and Data Science", degreeType: "B.Tech", duration: "4 Years", credits: 160 },
-    { courseId: "CRS-CEG-MECSE", college: cegCollege._id, department: cseDept._id, courseCode: "ME-CSE", courseName: "M.E Computer Science and Engineering", degreeType: "M.E", duration: "2 Years", credits: 80 },
+  // Seed 46 Master Courses
+  const coursesMasterList = [
+    "B.E. Computer Science & Engineering (CSE)",
+    "B.Tech Information Technology (IT)",
+    "B.Tech Artificial Intelligence & Data Science (AI & DS)",
+    "B.E. Computer & Communication Engineering",
+    "B.Tech Computer Science & Business Systems",
+    "B.E. CSE – Data Science",
+    "B.E. CSE – Cyber Security",
+    "B.E. CSE – AI & Machine Learning",
+    "B.E. CSE – Internet of Things (IoT)",
+    "B.E. Electronics & Communication Engineering (ECE)",
+    "B.E. Electrical & Electronics Engineering (EEE)",
+    "B.E. Electronics & Instrumentation Engineering (E&I)",
+    "B.E. Instrumentation & Control Engineering",
+    "B.E. Electronics & Telecommunication Engineering",
+    "B.E. Electronics Engineering – VLSI",
+    "B.E. Biomedical Engineering",
+    "B.E. Medical Electronics",
+    "B.E. Mechanical Engineering",
+    "B.E. Mechatronics Engineering",
+    "B.E. Automobile Engineering",
+    "B.E. Aeronautical Engineering",
+    "B.E. Aerospace Engineering",
+    "B.E. Robotics & Automation",
+    "B.E. Manufacturing Engineering",
+    "B.E. Production Engineering",
+    "B.E. Industrial Engineering",
+    "B.E. Marine Engineering",
+    "B.E. Materials Science & Engineering",
+    "B.E. Mechanical & Automation Engineering",
+    "B.E. Civil Engineering",
+    "B.E. Environmental Engineering",
+    "B.E. Geo-Informatics Engineering",
+    "B.E. Agricultural Engineering",
+    "B.E. Safety & Fire Engineering",
+    "B.Tech Chemical Engineering",
+    "B.Tech Biotechnology",
+    "B.Tech Chemical & Electrochemical Engineering",
+    "B.E./B.Tech Food Technology",
+    "B.Tech Pharmaceutical Technology",
+    "B.Tech Petroleum Engineering",
+    "B.Tech Petrochemical Technology",
+    "B.Tech Textile Technology",
+    "B.Tech Polymer / Plastic Technology",
+    "B.Tech Fashion Technology",
+    "B.Tech Textile Chemistry",
+    "B.Tech Handloom & Textile Technology",
   ];
-  const createdCourses = await Course.insertMany(coursesCSE);
-  const beCseCourse = createdCourses[0];
-  console.log(`✅ Seeded ${createdCourses.length} courses for CSE Department.`);
 
-  // Create Batches for B.E CSE
+  const courseDocs = coursesMasterList.map((cName, idx) => ({
+    courseId: `CRS-${idx + 101}`,
+    college: konguCollege._id,
+    department: cseDept._id,
+    courseCode: `CRS-CODE-${idx + 1}`,
+    courseName: cName,
+    name: cName,
+    degreeType: cName.startsWith("B.Tech") ? "B.Tech" : "B.E",
+    duration: "4 Years",
+    credits: 160,
+    instructor: "Head of Department",
+  }));
+
+  const createdCourses = await Course.insertMany(courseDocs);
+  const beCseCourse = createdCourses[0];
+  console.log(`✅ Seeded ${createdCourses.length} master academic courses.`);
+
+  // Seed Batches
   const batchesCSE = [
-    { batchId: "BCH-CEG-2022-2026", college: cegCollege._id, department: cseDept._id, course: beCseCourse._id, name: "2022-2026", academicYear: "2022-2026", startYear: 2022, endYear: 2026 },
-    { batchId: "BCH-CEG-2023-2027", college: cegCollege._id, department: cseDept._id, course: beCseCourse._id, name: "2023-2027", academicYear: "2023-2027", startYear: 2023, endYear: 2027 },
-    { batchId: "BCH-CEG-2024-2028", college: cegCollege._id, department: cseDept._id, course: beCseCourse._id, name: "2024-2028", academicYear: "2024-2028", startYear: 2024, endYear: 2028 },
+    { batchId: "BCH-KEC-2022-2026", college: konguCollege._id, department: cseDept._id, course: beCseCourse._id, name: "2022-2026", academicYear: "2022-2026", startYear: 2022, endYear: 2026 },
+    { batchId: "BCH-KEC-2023-2027", college: konguCollege._id, department: cseDept._id, course: beCseCourse._id, name: "2023-2027", academicYear: "2023-2027", startYear: 2023, endYear: 2027 },
+    { batchId: "BCH-KEC-2024-2028", college: konguCollege._id, department: cseDept._id, course: beCseCourse._id, name: "2024-2028", academicYear: "2024-2028", startYear: 2024, endYear: 2028 },
   ];
   const createdBatches = await Batch.insertMany(batchesCSE);
   const batch2027 = createdBatches[1];
-  console.log(`✅ Seeded ${createdBatches.length} batches for B.E CSE.`);
+  console.log(`✅ Seeded ${createdBatches.length} batches.`);
 
-  // Create Sample Student Records
+  // Sample Student
   const initialStudents = [
     {
       studentId: "STU-23CSE001",
@@ -191,14 +259,14 @@ async function seedTamilNaduColleges() {
       name: "Sri Abhirami",
       email: "sriabhirami@example.com",
       phone: "+91 9876543210",
-      college: cegCollege._id,
+      college: konguCollege._id,
       departmentRef: cseDept._id,
       courseRef: beCseCourse._id,
       batchRef: batch2027._id,
       department: "Computer Science and Engineering",
-      degree: "B.E Computer Science and Engineering",
-      institution: cegCollege.collegeName,
-      university: cegCollege.university,
+      degree: "B.E. Computer Science & Engineering (CSE)",
+      institution: konguCollege.collegeName,
+      university: konguCollege.university,
       batch: "2023-2027",
       graduationYear: 2027,
     },
@@ -208,14 +276,14 @@ async function seedTamilNaduColleges() {
       name: "Karthik Subramanian",
       email: "karthik.subramanian@example.com",
       phone: "+91 9876543211",
-      college: cegCollege._id,
+      college: konguCollege._id,
       departmentRef: cseDept._id,
       courseRef: beCseCourse._id,
       batchRef: batch2027._id,
       department: "Computer Science and Engineering",
-      degree: "B.E Computer Science and Engineering",
-      institution: cegCollege.collegeName,
-      university: cegCollege.university,
+      degree: "B.E. Computer Science & Engineering (CSE)",
+      institution: konguCollege.collegeName,
+      university: konguCollege.university,
       batch: "2023-2027",
       graduationYear: 2027,
     },
@@ -223,6 +291,35 @@ async function seedTamilNaduColleges() {
 
   const createdStudents = await Student.insertMany(initialStudents);
   console.log(`✅ Seeded ${createdStudents.length} sample student records.`);
+
+  // Default demo users
+  if (process.env.NODE_ENV !== "production") {
+    await User.create({
+      name: "Institution Administrator (DEV ONLY)",
+      email: "admin@blockcert.io",
+      passwordHash: "admin123",
+      role: "super_admin",
+      emailVerified: true,
+      institutionId: konguCollege.collegeId,
+      collegeRef: konguCollege._id,
+      status: "ACTIVE",
+    });
+
+    await User.create({
+      name: "Sri Abhirami (DEV ONLY)",
+      email: "student@blockcert.io",
+      passwordHash: "student123",
+      role: "student",
+      emailVerified: true,
+      institutionId: konguCollege.collegeId,
+      collegeRef: konguCollege._id,
+      studentRef: createdStudents[0]._id,
+      status: "ACTIVE",
+    });
+
+    console.log(`✅ Seeded development demo accounts.`);
+  }
+
   console.log("====================================================");
 }
 

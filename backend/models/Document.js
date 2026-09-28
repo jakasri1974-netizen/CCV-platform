@@ -44,8 +44,4 @@ const DocumentSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Create compound search index on sha256Hash
-DocumentSchema.index({ sha256Hash: 1 });
-DocumentSchema.index({ certificateId: 1 });
-
 module.exports = mongoose.model("Document", DocumentSchema);

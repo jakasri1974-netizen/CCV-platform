@@ -65,10 +65,18 @@ async function uploadToIPFS(fileBuffer, originalFilename, mimeType) {
           isPinata = true;
           console.log(`✅ IPFS Pinata Upload Success: CID ${cid}`);
         }
+      } else if (process.env.NODE_ENV === "production") {
+        const errorText = await response.text();
+        throw new Error(`Pinata IPFS Pinning failed (${response.status}): ${errorText}`);
       }
     } catch (err) {
-      console.warn("⚠️ Pinata API upload error, falling back to local IPFS gateway caching:", err.message);
+      if (process.env.NODE_ENV === "production") {
+        throw new Error(`IPFS Production Service Failure: ${err.message}`);
+      }
+      console.warn("⚠️ Pinata API upload error, falling back to local IPFS gateway caching (DEV ONLY):", err.message);
     }
+  } else if (process.env.NODE_ENV === "production") {
+    throw new Error("PINATA_JWT or Pinata API keys are missing in production configuration!");
   }
 
   // 2. Generate deterministic CID if Pinata unavailable or not configured

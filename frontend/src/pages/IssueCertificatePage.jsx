@@ -2,23 +2,28 @@ import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
 import CascadingSelector from '../components/CascadingSelector';
-import { studentApi, certificateApi, documentApi } from '../services/api';
+import Button from '../components/ui/Button';
+import Input from '../components/ui/Input';
+import Select from '../components/ui/Select';
+import Badge from '../components/ui/Badge';
+import Card from '../components/ui/Card';
+import { studentApi, certificateApi } from '../services/api';
 import {
   Award,
   Sparkles,
   ShieldCheck,
-  CheckCircle2,
-  AlertTriangle,
+  CheckCircle,
+  AlertCircle,
   RefreshCw,
-  Search,
   ExternalLink,
   Cpu,
   FileCheck,
-  Upload,
-  FileText,
-  X,
   User,
   GraduationCap,
+  ArrowRight,
+  Database,
+  Hash,
+  Lock,
 } from 'lucide-react';
 
 export default function IssueCertificatePage() {
@@ -70,6 +75,8 @@ export default function IssueCertificatePage() {
     }
   };
 
+  const selectedStudentObj = students.find((s) => s._id === studentId);
+
   const handleIssueSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
@@ -79,21 +86,20 @@ export default function IssueCertificatePage() {
       return;
     }
 
-    const selectedStudent = students.find((s) => s._id === studentId);
-    if (!selectedStudent) return;
+    if (!selectedStudentObj) return;
 
     try {
       setIssuanceStep(1);
 
       // Prepare certificate record via backend API
       const res = await certificateApi.prepare({
-        studentId: selectedStudent._id,
-        courseId: selectedCourse?._id || selectedStudent.courseRef || '65c000000000000000000001',
+        studentId: selectedStudentObj._id,
+        courseId: selectedCourse?._id || selectedStudentObj.courseRef || '65c000000000000000000001',
         certificateId,
         grade: 'Pass',
         completionDate: new Date().toISOString().split('T')[0],
         certificateType,
-        institutionId: selectedCollege?.collegeName || selectedStudent.institution || 'ABC Engineering College',
+        institutionId: selectedCollege?.collegeName || selectedStudentObj.institution || 'ABC Engineering College',
       });
 
       if (!res.success) {
@@ -110,9 +116,9 @@ export default function IssueCertificatePage() {
 
       setResultData({
         certificateId,
-        studentName: selectedStudent.name,
-        registerNumber: selectedStudent.registerNumber,
-        academicRecordId: selectedStudent.academicRecordId || certificateId,
+        studentName: selectedStudentObj.name,
+        registerNumber: selectedStudentObj.registerNumber,
+        academicRecordId: selectedStudentObj.academicRecordId || certificateId,
         qrVerificationUrl: res.data.qrVerificationUrl,
       });
 
@@ -124,24 +130,37 @@ export default function IssueCertificatePage() {
     }
   };
 
+  const workflowSteps = [
+    { num: 1, title: 'Student Selection', icon: User },
+    { num: 2, title: 'Identity Check', icon: ShieldCheck },
+    { num: 3, title: 'Academic Record', icon: FileCheck },
+    { num: 4, title: 'IPFS Storage', icon: Database },
+    { num: 5, title: 'SHA-256 Hashing', icon: Hash },
+    { num: 6, title: 'Merkle Root', icon: Cpu },
+    { num: 7, title: 'Blockchain Anchor', icon: Lock },
+  ];
+
   return (
-    <div className="min-h-screen flex flex-col bg-slate-900 text-slate-100 font-sans">
+    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans">
       <Navbar />
 
       <div className="flex-1 flex">
         <Sidebar />
 
         <main className="flex-1 p-6 max-w-5xl mx-auto w-full space-y-6">
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-800/80 p-6 rounded-3xl border border-slate-700/60 shadow-xl backdrop-blur-md">
+          {/* Header Card */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
             <div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 text-xs font-semibold mb-2">
+              <div className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-1 flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>Cascading Filter Selection</span>
+                <span>Institutional Issuance Engine</span>
               </div>
-              <h1 className="text-2xl font-extrabold text-white">Issue Academic Record & Certificate</h1>
-              <p className="text-xs text-slate-400 mt-1">
-                Select College ➔ Department ➔ Course ➔ Batch to filter students and issue official blockchain-verifiable credentials.
+              <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+                <Award className="w-6 h-6 text-indigo-600" />
+                Issue & Anchor Academic Credential Record
+              </h1>
+              <p className="text-xs text-slate-500 mt-1">
+                Filter by College ➔ Department ➔ Course ➔ Batch to generate SHA-256 tamper-proof credentials anchored to blockchain backend.
               </p>
             </div>
           </div>
@@ -158,124 +177,191 @@ export default function IssueCertificatePage() {
             setSelectedBatch={setSelectedBatch}
           />
 
+          {/* 7-Step Workflow Visualization Stepper */}
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs overflow-x-auto">
+            <div className="flex items-center justify-between min-w-[700px] gap-2">
+              {workflowSteps.map((step, index) => {
+                const IconComp = step.icon;
+                const isActive = issuanceStep === 1 || (issuanceStep === 2 && step.num <= 7);
+                const isComplete = issuanceStep === 2;
+
+                return (
+                  <React.Fragment key={step.num}>
+                    <div className="flex flex-col items-center text-center space-y-1.5 flex-1">
+                      <div
+                        className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs transition ${
+                          isComplete
+                            ? 'bg-emerald-600 text-white shadow-sm'
+                            : isActive
+                            ? 'bg-indigo-600 text-white animate-pulse'
+                            : 'bg-slate-100 text-slate-500 border border-slate-200'
+                        }`}
+                      >
+                        <IconComp className="w-4 h-4" />
+                      </div>
+                      <span className="text-[10px] font-bold text-slate-700 leading-tight">
+                        {step.title}
+                      </span>
+                    </div>
+                    {index < workflowSteps.length - 1 && (
+                      <div className="w-6 h-[2px] bg-slate-200 shrink-0 self-center mb-4" />
+                    )}
+                  </React.Fragment>
+                );
+              })}
+            </div>
+          </div>
+
           {errorMsg && (
-            <div className="p-4 bg-rose-500/10 border border-rose-500/30 rounded-2xl text-rose-200 text-xs flex items-center gap-3">
-              <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0" />
+            <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-900 text-xs flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
               <div>
                 <div className="font-bold">Issuance Error</div>
-                <div className="text-rose-300 mt-0.5">{errorMsg}</div>
+                <div className="text-rose-700 mt-0.5">{errorMsg}</div>
               </div>
             </div>
           )}
 
-          {/* Stepper Progress Indicator */}
+          {/* Stepper Processing State */}
           {issuanceStep === 1 && (
-            <div className="bg-slate-800 rounded-3xl p-8 text-center border border-slate-700 shadow-xl">
-              <RefreshCw className="w-10 h-10 text-indigo-400 animate-spin mx-auto mb-3" />
-              <div className="text-base font-bold text-white">Generating Academic Credential & Hashing...</div>
-              <div className="text-xs text-slate-400 mt-1">
-                Computing SHA-256 Merkle Root & anchoring via backend wallet service...
+            <div className="bg-white rounded-2xl p-10 text-center border border-slate-200 shadow-xs space-y-3">
+              <RefreshCw className="w-10 h-10 text-indigo-600 animate-spin mx-auto" />
+              <div className="text-base font-black text-slate-900">
+                Generating Academic Credential & Computing Merkle Proof...
               </div>
+              <p className="text-xs text-slate-500 max-w-md mx-auto">
+                Computing SHA-256 hash digest, pinning metadata to IPFS, and executing backend Polygon anchoring transaction...
+              </p>
             </div>
           )}
 
-          {/* Success Step */}
+          {/* Success Result Step */}
           {issuanceStep === 2 && resultData && (
-            <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-3xl p-8 shadow-xl text-emerald-100 space-y-5 backdrop-blur-md">
+            <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-6 sm:p-8 shadow-xs text-emerald-950 space-y-5">
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/30">
-                  <CheckCircle2 className="w-8 h-8" />
+                <div className="w-12 h-12 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-md">
+                  <CheckCircle className="w-7 h-7" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-extrabold text-white">
-                    Academic Record Issued Successfully!
+                  <h3 className="text-xl font-black text-slate-900">
+                    Academic Credential Issued & Anchored Successfully!
                   </h3>
-                  <p className="text-xs text-emerald-300">
-                    Student <span className="font-bold text-white">{resultData.studentName} ({resultData.registerNumber})</span> • ID <span className="font-mono font-bold text-indigo-300">{resultData.certificateId}</span>
+                  <p className="text-xs text-slate-600 mt-0.5">
+                    Student <span className="font-bold text-slate-900">{resultData.studentName} ({resultData.registerNumber})</span> • Certificate ID <span className="font-mono font-bold text-indigo-600">{resultData.certificateId}</span>
                   </p>
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-2">
+              <div className="bg-white p-4 rounded-xl border border-emerald-200 text-xs grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <span className="text-slate-500 block text-[10px] uppercase font-bold">Academic Record ID</span>
+                  <span className="font-mono font-bold text-indigo-600">{resultData.academicRecordId}</span>
+                </div>
+                <div>
+                  <span className="text-slate-500 block text-[10px] uppercase font-bold">Verification Gateway</span>
+                  <span className="font-mono text-emerald-700 font-bold">SHA-256 IPFS & Polygon Proof</span>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
                 <a
                   href={`/verify/${resultData.certificateId}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-xs font-bold py-3 rounded-2xl text-center shadow-lg transition"
+                  className="flex-1"
                 >
-                  View Employer Verification Page
+                  <Button variant="success" size="md" className="w-full" icon={ExternalLink}>
+                    View Public Verification Page
+                  </Button>
                 </a>
-                <button
+                <Button
+                  variant="outline"
+                  size="md"
                   onClick={() => {
                     setIssuanceStep(0);
                     setCertificateId(`BCERT-2026-${Math.floor(100000 + Math.random() * 900000)}`);
                   }}
-                  className="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-xs font-semibold px-5 py-3 rounded-2xl transition"
+                  icon={RefreshCw}
                 >
                   Issue Another Credential
-                </button>
+                </Button>
               </div>
             </div>
           )}
 
           {/* Main Issuance Form */}
           {issuanceStep === 0 && (
-            <form onSubmit={handleIssueSubmit} className="bg-slate-800/80 rounded-3xl p-6 sm:p-8 border border-slate-700/60 shadow-xl space-y-6 backdrop-blur-md">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                <div>
-                  <label className="block text-slate-400 font-semibold mb-1.5">Select Student ({students.length} in selected batch)</label>
-                  <select
-                    value={studentId}
-                    onChange={(e) => setStudentId(e.target.value)}
-                    disabled={loadingStudents || students.length === 0}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-2xl px-4 py-3 text-white font-semibold focus:outline-none focus:border-indigo-500 disabled:opacity-50"
-                    required
-                  >
-                    {students.length > 0 ? (
-                      students.map((s) => (
-                        <option key={s._id} value={s._id} className="bg-slate-900 text-white">
-                          {s.registerNumber} – {s.name}
-                        </option>
-                      ))
-                    ) : (
-                      <option value="" className="bg-slate-900 text-slate-400">No students found in selected batch</option>
-                    )}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-slate-400 font-semibold mb-1.5">Academic Record / Certificate ID</label>
-                  <input
-                    type="text"
-                    value={certificateId}
-                    onChange={(e) => setCertificateId(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-2xl px-4 py-3 text-indigo-300 font-mono font-bold focus:outline-none focus:border-indigo-500"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-slate-400 font-semibold mb-1.5">Credential Document Type</label>
-                <select
-                  value={certificateType}
-                  onChange={(e) => setCertificateType(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-2xl px-4 py-3 text-white font-semibold focus:outline-none focus:border-indigo-500"
+            <form onSubmit={handleIssueSubmit} className="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-xs space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-xs">
+                <Select
+                  label={`Select Target Student (${students.length} in selected batch)`}
+                  required
+                  value={studentId}
+                  onChange={(e) => setStudentId(e.target.value)}
+                  disabled={loadingStudents || students.length === 0}
                 >
-                  <option value="Final Degree Certificate">Final Degree Certificate</option>
-                  <option value="Consolidated Marksheet">Consolidated Academic Marksheet</option>
-                  <option value="Provisional Degree Certificate">Provisional Degree Certificate</option>
-                </select>
+                  {students.length > 0 ? (
+                    students.map((s) => (
+                      <option key={s._id} value={s._id}>
+                        {s.registerNumber} – {s.name}
+                      </option>
+                    ))
+                  ) : (
+                    <option value="">No students found in selected batch</option>
+                  )}
+                </Select>
+
+                <Input
+                  label="Academic Certificate / Credential ID"
+                  required
+                  value={certificateId}
+                  onChange={(e) => setCertificateId(e.target.value)}
+                  icon={Hash}
+                  className="font-mono font-bold text-indigo-600"
+                />
               </div>
 
-              <button
-                type="submit"
-                disabled={!studentId}
-                className="w-full bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 disabled:opacity-50 text-white text-xs font-bold py-3.5 rounded-2xl shadow-lg transition flex items-center justify-center gap-2 mt-4"
-              >
-                <Award className="w-4 h-4" />
-                <span>Issue & Anchor Academic Credential Record</span>
-              </button>
+              {/* Selected Student Detail Card */}
+              {selectedStudentObj && (
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-2">
+                      <span className="font-extrabold text-slate-900 text-sm">{selectedStudentObj.name}</span>
+                      <Badge variant="indigo">{selectedStudentObj.registerNumber}</Badge>
+                    </div>
+                    <p className="text-slate-500 text-[11px]">
+                      {selectedStudentObj.degree || 'Degree N/A'} • {selectedStudentObj.institution || 'ABC Engineering College'} ({selectedStudentObj.batch})
+                    </p>
+                  </div>
+                  <Badge variant="emerald" icon={ShieldCheck}>
+                    Verified Roster Record
+                  </Badge>
+                </div>
+              )}
+
+              <Select
+                label="Credential Document Type"
+                value={certificateType}
+                onChange={(e) => setCertificateType(e.target.value)}
+                options={[
+                  'Final Degree Certificate',
+                  'Consolidated Academic Marksheet',
+                  'Provisional Degree Certificate',
+                ]}
+              />
+
+              <div className="pt-2">
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="lg"
+                  className="w-full"
+                  disabled={!studentId}
+                  icon={Award}
+                >
+                  Issue & Anchor Academic Credential Record
+                </Button>
+              </div>
             </form>
           )}
         </main>
@@ -283,3 +369,4 @@ export default function IssueCertificatePage() {
     </div>
   );
 }
+

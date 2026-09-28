@@ -1,7 +1,10 @@
 {
-  "address": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+  "address": "0x8ED130360DB4eCabCAAa3Eb9cf4afAb107c16f59",
+  "batchRegistryAddress": "0x8ED130360DB4eCabCAAa3Eb9cf4afAb107c16f59",
   "deployer": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
-  "network": "hardhat",
-  "chainId": 31337,
-  "deployedAt": "2026-08-10T06:45:11.928Z"
+  "network": "polygon-amoy",
+  "chainId": 80002,
+  "deployedAt": "2026-09-22T05:31:33.558Z",
+  "deploymentTxHash": "0x66620a72069781d7bf93f794271656c1f2085069115e120f19980f3b08e46d0c",
+  "blockNumber": 48232853
 }

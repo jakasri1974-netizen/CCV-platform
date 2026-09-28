@@ -3,8 +3,14 @@ import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
 import StatusBadge from '../components/StatusBadge';
 import QRModal from '../components/QRModal';
+import Button from '../components/ui/Button';
+import Input from '../components/ui/Input';
+import Select from '../components/ui/Select';
+import Badge from '../components/ui/Badge';
+import Modal from '../components/ui/Modal';
+import EmptyState from '../components/ui/EmptyState';
+import { TableSkeleton } from '../components/ui/Skeleton';
 import { certificateApi } from '../services/api';
-import { useWallet } from '../context/WalletContext';
 import {
   Award,
   Search,
@@ -13,8 +19,10 @@ import {
   Ban,
   ExternalLink,
   RefreshCw,
-  Copy,
-  Check,
+  AlertTriangle,
+  CheckCircle,
+  FileSpreadsheet,
+  ShieldAlert,
 } from 'lucide-react';
 
 export default function CertificatesListPage() {
@@ -23,9 +31,11 @@ export default function CertificatesListPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [selectedQrCertId, setSelectedQrCertId] = useState(null);
-  const [revokingId, setRevokingId] = useState(null);
 
-  const { signer, account, connectWallet } = useWallet();
+  // Revocation Modal State
+  const [revokeTarget, setRevokeTarget] = useState(null);
+  const [revokeReason, setRevokeReason] = useState('Administrative Audit Correction');
+  const [revoking, setRevoking] = useState(false);
 
   useEffect(() => {
     fetchCertificates();
@@ -45,104 +55,105 @@ export default function CertificatesListPage() {
     }
   };
 
-  const handleRevoke = async (cert) => {
-    if (!account || !signer) {
-      alert("Please connect your MetaMask wallet to execute smart contract revocation.");
-      connectWallet();
-      return;
-    }
+  const handleConfirmRevoke = async (e) => {
+    e.preventDefault();
+    if (!revokeTarget) return;
 
-    if (!window.confirm(`Are you sure you want to REVOKE certificate ${cert.certificateId}? This will mark status as valid=false on Polygon smart contract.`)) {
-      return;
-    }
-
-    setRevokingId(cert.certificateId);
+    setRevoking(true);
     try {
-      const contractService = await import('../services/contractService');
-      const receipt = await contractService.revokeCertificateOnChain(signer, cert.certificateId);
-      
-      await certificateApi.revoke(cert.certificateId, {
-        transactionHash: receipt.transactionHash,
-      });
-
-      alert(`Certificate ${cert.certificateId} has been successfully REVOKED on-chain.`);
-      fetchCertificates();
+      const res = await certificateApi.revoke(revokeTarget.certificateId, { reason: revokeReason });
+      if (res.success) {
+        setRevokeTarget(null);
+        fetchCertificates();
+      } else {
+        throw new Error(res.message || "Revocation failed.");
+      }
     } catch (err) {
       console.error("Revocation error:", err);
       alert(err.message || "Revocation failed.");
     } finally {
-      setRevokingId(null);
+      setRevoking(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900">
+    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans">
       <Navbar />
 
       <div className="flex-1 flex">
         <Sidebar />
 
         <main className="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6">
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          {/* Header Card */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
             <div>
-              <h1 className="text-2xl font-extrabold text-slate-900">Issued Certificates Registry</h1>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Audit list of all academic credentials anchored on Polygon smart contracts.
+              <div className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-1">
+                Polygon Smart Contract Registry
+              </div>
+              <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+                <Award className="w-6 h-6 text-indigo-600" />
+                Issued Credentials & Audit Log
+              </h1>
+              <p className="text-xs text-slate-500 mt-1">
+                Audit list of all academic credentials anchored on Polygon smart contracts with tamper-evident status checks.
               </p>
             </div>
 
-            <a
-              href="/admin/issue"
-              className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md transition"
-            >
-              <Award className="w-4 h-4" />
-              <span>Issue New Certificate</span>
+            <a href="/admin/issue">
+              <Button variant="primary" size="md" icon={Award}>
+                Issue New Certificate
+              </Button>
             </a>
           </div>
 
           {/* Search & Filter Bar */}
-          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1">
-              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row gap-3 items-center justify-between">
+            <div className="relative flex-1 w-full">
+              <Input
+                icon={Search}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search by certificate ID, student name, or course..."
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-xs text-slate-900 focus:outline-none focus:border-indigo-600"
               />
             </div>
 
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 font-semibold focus:outline-none focus:border-indigo-600"
-            >
-              <option value="">All Statuses</option>
-              <option value="VERIFIED">BLOCKCHAIN VERIFIED</option>
-              <option value="REVOKED">REVOKED</option>
-              <option value="PENDING">PENDING</option>
-            </select>
+            <div className="w-full sm:w-64">
+              <Select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                options={[
+                  { value: '', label: 'All Credential Statuses' },
+                  { value: 'VERIFIED', label: 'BLOCKCHAIN VERIFIED' },
+                  { value: 'REVOKED', label: 'REVOKED ON-CHAIN' },
+                  { value: 'PENDING', label: 'PENDING ANCHOR' },
+                ]}
+              />
+            </div>
           </div>
 
           {/* Certificates Table */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-100">
+                <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200 uppercase tracking-wider text-[10px]">
                   <tr>
                     <th className="p-3.5 pl-5">Certificate ID</th>
-                    <th className="p-3.5">Student</th>
-                    <th className="p-3.5">Course</th>
+                    <th className="p-3.5">Student Name</th>
+                    <th className="p-3.5">Course / Degree</th>
                     <th className="p-3.5">Grade</th>
-                    <th className="p-3.5">Date</th>
-                    <th className="p-3.5">Status</th>
+                    <th className="p-3.5">Issue Date</th>
+                    <th className="p-3.5">Blockchain Status</th>
                     <th className="p-3.5 pr-5 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
-                  {certificates.length > 0 ? (
+                  {loading ? (
+                    <tr>
+                      <td colSpan="7" className="p-6">
+                        <TableSkeleton rows={6} />
+                      </td>
+                    </tr>
+                  ) : certificates.length > 0 ? (
                     certificates.map((cert) => (
                       <tr key={cert._id} className="hover:bg-slate-50/80 transition">
                         <td className="p-3.5 pl-5 font-mono text-indigo-600 font-bold">
@@ -182,8 +193,7 @@ export default function CertificatesListPage() {
 
                           {cert.status === 'VERIFIED' && (
                             <button
-                              onClick={() => handleRevoke(cert)}
-                              disabled={revokingId === cert.certificateId}
+                              onClick={() => setRevokeTarget(cert)}
                               className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
                               title="Revoke Certificate On-Chain"
                             >
@@ -195,8 +205,11 @@ export default function CertificatesListPage() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="7" className="text-center p-8 text-slate-400">
-                        No certificate records found matching criteria.
+                      <td colSpan="7" className="p-8">
+                        <EmptyState
+                          title="No Certificates Found"
+                          description="No certificate records match your search or status criteria."
+                        />
                       </td>
                     </tr>
                   )}
@@ -207,11 +220,64 @@ export default function CertificatesListPage() {
         </main>
       </div>
 
+      {/* QR Code Verification Modal */}
       <QRModal
         certificateId={selectedQrCertId}
         isOpen={Boolean(selectedQrCertId)}
         onClose={() => setSelectedQrCertId(null)}
       />
+
+      {/* Revocation Confirmation Modal */}
+      <Modal
+        isOpen={!!revokeTarget}
+        onClose={() => setRevokeTarget(null)}
+        title="Revoke Academic Certificate On-Chain"
+        subtitle={revokeTarget ? `Target: ${revokeTarget.certificateId} (${revokeTarget.student?.name || 'Student'})` : ''}
+      >
+        {revokeTarget && (
+          <form onSubmit={handleConfirmRevoke} className="space-y-4 text-xs">
+            <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-900 flex items-start gap-3">
+              <ShieldAlert className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+              <div>
+                <div className="font-bold text-xs">Irreversible Blockchain Action</div>
+                <div className="text-[11px] text-rose-700 mt-0.5">
+                  Revoking this certificate updates the Polygon smart contract state to REVOKED. All future public QR scans and employer verifications will mark this document as invalid.
+                </div>
+              </div>
+            </div>
+
+            <Select
+              label="Select Official Reason for Revocation"
+              value={revokeReason}
+              onChange={(e) => setRevokeReason(e.target.value)}
+              options={[
+                'Administrative Audit Correction',
+                'Fraudulent Document Submission',
+                'Degree Requirement Incomplete',
+                'Administrative Recall by Registrar',
+              ]}
+            />
+
+            <div className="pt-2 flex justify-end gap-2">
+              <Button
+                variant="ghost"
+                onClick={() => setRevokeTarget(null)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="danger"
+                isLoading={revoking}
+                icon={Ban}
+              >
+                Confirm On-Chain Revocation
+              </Button>
+            </div>
+          </form>
+        )}
+      </Modal>
     </div>
   );
 }
+

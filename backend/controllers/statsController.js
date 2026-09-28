@@ -8,10 +8,12 @@ const { getOnChainStats } = require("../services/blockchainService");
 // @route GET /api/dashboard/stats
 const getDashboardStats = async (req, res, next) => {
   try {
+    const Document = require("../models/Document");
     const [
       totalStudents,
       totalCourses,
-      totalIssued,
+      totalCerts,
+      totalDocs,
       activeCertificates,
       revokedCertificates,
       totalVerifications,
@@ -19,10 +21,13 @@ const getDashboardStats = async (req, res, next) => {
       Student.countDocuments(),
       Course.countDocuments(),
       Certificate.countDocuments(),
+      Document.countDocuments(),
       Certificate.countDocuments({ status: "VERIFIED" }),
       Certificate.countDocuments({ status: "REVOKED" }),
       VerificationLog.countDocuments(),
     ]);
+
+    const totalIssued = totalCerts + totalDocs;
 
     // Monthly Issuance Chart Data (Last 6 Months)
     const monthlyIssuance = await Certificate.aggregate([

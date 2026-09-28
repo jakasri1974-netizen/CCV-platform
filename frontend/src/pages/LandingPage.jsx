@@ -2,14 +2,17 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import Button from '../components/ui/Button';
+import Input from '../components/ui/Input';
+import Badge from '../components/ui/Badge';
 import {
   ShieldCheck,
   Search,
   Lock,
   Cpu,
   FileCheck,
-  CheckCircle2,
-  AlertOctagon,
+  CheckCircle,
+  AlertCircle,
   ArrowRight,
   Sparkles,
   QrCode,
@@ -17,6 +20,7 @@ import {
   GraduationCap,
   Briefcase,
   ExternalLink,
+  Layers,
 } from 'lucide-react';
 
 export default function LandingPage() {
@@ -31,180 +35,141 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-900 text-white selection:bg-indigo-500 selection:text-white">
+    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans selection:bg-indigo-500 selection:text-white">
       <Navbar />
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden pt-16 pb-24 lg:pt-24 lg:pb-32 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-900">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-600/15 rounded-full blur-[140px] pointer-events-none" />
-        
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-semibold mb-6 animate-pulse">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Polygon PoS Smart Contract Powered</span>
+      <section className="relative overflow-hidden pt-16 pb-20 lg:pt-24 lg:pb-28 bg-slate-900 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-6">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-bold">
+            <Sparkles className="w-4 h-4 text-indigo-400" />
+            <span>Polygon Smart Contract & IPFS Decentralized Verifier</span>
           </div>
 
-          <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight font-sans text-white max-w-4xl mx-auto leading-tight sm:leading-tight">
-            Trust Every Credential with <span className="bg-gradient-to-r from-indigo-400 via-violet-300 to-pink-400 bg-clip-text text-transparent">Blockchain Proof</span>
+          <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-white max-w-4xl mx-auto leading-tight">
+            Trust Every Academic Credential with <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-teal-300 to-emerald-400">Blockchain Proof</span>
           </h1>
 
-          <p className="mt-6 text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto font-light leading-relaxed">
-            Eliminate certificate forgery and manual background verification. BlockCert anchors cryptographic SHA-256 hashes on Polygon for instant, tamper-resistant employer verification.
+          <p className="text-base sm:text-lg text-slate-400 max-w-2xl mx-auto font-normal leading-relaxed">
+            Eliminate certificate forgery and manual background verification delays. BlockCert anchors SHA-256 Merkle Roots on Polygon for instant, tamper-resistant employer verification.
           </p>
 
           {/* Quick Verification Lookup Widget */}
-          <div className="mt-10 max-w-xl mx-auto">
-            <form onSubmit={handleVerifySubmit} className="flex flex-col sm:flex-row gap-2 bg-slate-800/80 p-2 rounded-2xl border border-slate-700/80 shadow-2xl backdrop-blur-md">
+          <div className="mt-8 max-w-xl mx-auto space-y-3">
+            <form onSubmit={handleVerifySubmit} className="flex flex-col sm:flex-row gap-2.5 bg-slate-800/90 p-2.5 rounded-2xl border border-slate-700 shadow-2xl backdrop-blur-md">
               <div className="relative flex-1">
-                <Search className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="text"
+                <Input
+                  icon={Search}
                   value={certIdInput}
                   onChange={(e) => setCertIdInput(e.target.value)}
-                  placeholder="Enter Certificate ID (e.g. BCERT-2026-000001)"
-                  className="w-full bg-slate-900/90 text-white placeholder-slate-400 text-sm pl-11 pr-4 py-3 rounded-xl border border-slate-700/60 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 font-mono"
+                  placeholder="Enter Certificate ID (e.g. BCERT-2026-000001)..."
+                  className="bg-slate-900 text-white border-slate-700 font-mono font-bold"
                   required
                 />
               </div>
-              <button
+              <Button
                 type="submit"
-                className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-sm font-semibold px-6 py-3 rounded-xl transition-all shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2"
+                variant="primary"
+                size="md"
+                className="shrink-0"
+                icon={ArrowRight}
               >
-                <span>Verify Instantly</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
+                Verify Instantly
+              </Button>
             </form>
-            <div className="mt-2 text-xs text-slate-400 flex items-center justify-center gap-4">
-              <span>Try sample: <button onClick={() => setCertIdInput('BCERT-2026-000001')} className="text-indigo-400 hover:underline font-mono">BCERT-2026-000001</button></span>
+            <div className="text-xs text-slate-400 flex items-center justify-center gap-4">
+              <span>Try sample ID: <button onClick={() => setCertIdInput('BCERT-2026-000001')} className="text-indigo-400 hover:underline font-mono font-bold">BCERT-2026-000001</button></span>
               <span>•</span>
-              <span className="text-emerald-400">No MetaMask required for employers</span>
+              <span className="text-emerald-400 font-medium">Zero MetaMask setup required</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Problem vs Solution Section */}
-      <section className="py-20 bg-slate-900 border-t border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-extrabold text-white">Why Traditional Certificates Fail</h2>
-            <p className="text-slate-400 text-sm mt-2 max-w-xl mx-auto">
-              Paper degrees and standard PDFs are easily edited with basic software, creating massive risk for hiring managers.
+      {/* Feature Grid Section */}
+      <section className="py-20 bg-white border-t border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+          <div className="text-center max-w-2xl mx-auto space-y-2">
+            <div className="text-xs font-bold text-indigo-600 uppercase tracking-wider">Enterprise Architecture</div>
+            <h2 className="text-3xl font-black text-slate-900 tracking-tight">Built for Universities & Employers</h2>
+            <p className="text-xs text-slate-500">
+              Replacing insecure paper credentials with tamper-proof SHA-256 Merkle tree proofs.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            {/* Traditional Card */}
-            <div className="p-8 rounded-2xl bg-rose-950/20 border border-rose-900/40 relative">
-              <div className="w-12 h-12 rounded-xl bg-rose-900/30 text-rose-400 flex items-center justify-center mb-6">
-                <AlertOctagon className="w-6 h-6" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="p-8 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+              <div className="w-12 h-12 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center font-bold">
+                <Building2 className="w-6 h-6" />
               </div>
-              <h3 className="text-xl font-bold text-rose-300">The Problem: Vulnerable Credentials</h3>
-              <ul className="mt-4 space-y-3 text-sm text-slate-300">
-                <li className="flex items-start gap-2">
-                  <span className="text-rose-400 mt-1">•</span> Easy PDF editing and Photoshop degree counterfeiting.
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-rose-400 mt-1">•</span> Weeks of delayed manual verification by universities.
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-rose-400 mt-1">•</span> High operational overhead and central database hack risks.
-                </li>
-              </ul>
+              <h3 className="text-lg font-black text-slate-900">For Universities & Institutions</h3>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Cascading hierarchy management (College ➔ Department ➔ Course ➔ Batch), CSV bulk student import, IPFS document storage, and Polygon Merkle root anchoring.
+              </p>
             </div>
 
-            {/* BlockCert Solution Card */}
-            <div className="p-8 rounded-2xl bg-indigo-950/30 border border-indigo-500/40 relative shadow-xl shadow-indigo-900/10">
-              <div className="w-12 h-12 rounded-xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center mb-6">
-                <ShieldCheck className="w-6 h-6" />
+            <div className="p-8 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+              <div className="w-12 h-12 rounded-xl bg-teal-50 border border-teal-200 text-teal-600 flex items-center justify-center font-bold">
+                <GraduationCap className="w-6 h-6" />
               </div>
-              <h3 className="text-xl font-bold text-indigo-300">The Solution: BlockCert Verification</h3>
-              <ul className="mt-4 space-y-3 text-sm text-slate-300">
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 mt-1 shrink-0" /> Immutable SHA-256 cryptographic hash anchored on Polygon.
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 mt-1 shrink-0" /> Zero-latency instant verification for employers via QR code.
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 mt-1 shrink-0" /> Privacy protected: Student PII remains off-chain in database.
-                </li>
-              </ul>
+              <h3 className="text-lg font-black text-slate-900">For Students & Alumni</h3>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Permanent ownership of academic records, semester marksheets, downloadable PDF credentials, and instant public verification links.
+              </p>
+            </div>
+
+            <div className="p-8 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+              <div className="w-12 h-12 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center font-bold">
+                <Briefcase className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-black text-slate-900">For Employers & Verifiers</h3>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Zero friction background checks. Scan student QR code or upload candidate PDF bytes to verify directly against Polygon smart contracts.
+              </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* How it Works Workflow */}
-      <section className="py-20 bg-slate-950 border-t border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-extrabold text-white">How BlockCert Works</h2>
-            <p className="text-slate-400 text-sm mt-2">End-to-end cryptographic lifecycle for academic degrees</p>
+      {/* 4-Step Technical Workflow */}
+      <section className="py-20 bg-slate-900 text-white border-t border-slate-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+          <div className="text-center max-w-2xl mx-auto space-y-2">
+            <h2 className="text-3xl font-black text-white tracking-tight">How BlockCert Works</h2>
+            <p className="text-xs text-slate-400">End-to-end cryptographic credential lifecycle</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 text-center">
-              <div className="w-10 h-10 rounded-full bg-indigo-600/20 text-indigo-400 flex items-center justify-center mx-auto mb-4 font-bold text-sm">
+            <div className="p-6 rounded-2xl bg-slate-800 border border-slate-700 text-center space-y-3">
+              <div className="w-10 h-10 rounded-xl bg-indigo-600/30 text-indigo-300 flex items-center justify-center mx-auto font-black text-sm border border-indigo-500/30">
                 01
               </div>
-              <h4 className="font-bold text-white mb-2">Issue Credential</h4>
-              <p className="text-xs text-slate-400">Institution admin inputs student and course assessment data.</p>
+              <h4 className="font-extrabold text-white text-sm">Roster & Academic Setup</h4>
+              <p className="text-xs text-slate-400">Institution registers student roster and uploads semester marksheets to IPFS.</p>
             </div>
 
-            <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 text-center">
-              <div className="w-10 h-10 rounded-full bg-indigo-600/20 text-indigo-400 flex items-center justify-center mx-auto mb-4 font-bold text-sm">
+            <div className="p-6 rounded-2xl bg-slate-800 border border-slate-700 text-center space-y-3">
+              <div className="w-10 h-10 rounded-xl bg-indigo-600/30 text-indigo-300 flex items-center justify-center mx-auto font-black text-sm border border-indigo-500/30">
                 02
               </div>
-              <h4 className="font-bold text-white mb-2">Generate SHA-256</h4>
-              <p className="text-xs text-slate-400">Canonical deterministic payload produces a unique cryptographic hash.</p>
+              <h4 className="font-extrabold text-white text-sm">SHA-256 Merkle Tree</h4>
+              <p className="text-xs text-slate-400">Batches 8,000+ certificates into a single cryptographic 32-byte Merkle root digest.</p>
             </div>
 
-            <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 text-center">
-              <div className="w-10 h-10 rounded-full bg-indigo-600/20 text-indigo-400 flex items-center justify-center mx-auto mb-4 font-bold text-sm">
+            <div className="p-6 rounded-2xl bg-slate-800 border border-slate-700 text-center space-y-3">
+              <div className="w-10 h-10 rounded-xl bg-indigo-600/30 text-indigo-300 flex items-center justify-center mx-auto font-black text-sm border border-indigo-500/30">
                 03
               </div>
-              <h4 className="font-bold text-white mb-2">Polygon Smart Contract</h4>
-              <p className="text-xs text-slate-400">MetaMask submits transaction anchoring hash on Polygon PoS.</p>
+              <h4 className="font-extrabold text-white text-sm">Polygon Blockchain Anchor</h4>
+              <p className="text-xs text-slate-400">Backend wallet service executes Polygon smart contract anchoring transaction.</p>
             </div>
 
-            <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 text-center">
-              <div className="w-10 h-10 rounded-full bg-indigo-600/20 text-indigo-400 flex items-center justify-center mx-auto mb-4 font-bold text-sm">
+            <div className="p-6 rounded-2xl bg-slate-800 border border-slate-700 text-center space-y-3">
+              <div className="w-10 h-10 rounded-xl bg-indigo-600/30 text-indigo-300 flex items-center justify-center mx-auto font-black text-sm border border-indigo-500/30">
                 04
               </div>
-              <h4 className="font-bold text-white mb-2">Instant QR Verify</h4>
-              <p className="text-xs text-slate-400">Employer scans QR or enters ID to check live on-chain status.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Stakeholders Section */}
-      <section className="py-20 bg-slate-900 border-t border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="p-8 rounded-2xl bg-slate-800/50 border border-slate-700/60">
-              <Building2 className="w-8 h-8 text-indigo-400 mb-4" />
-              <h3 className="text-lg font-bold text-white mb-2">For Institutions</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Effortless batch credential issuance, custom certificate PDF generation, automated verification statistics, and smart contract revocation tools.
-              </p>
-            </div>
-
-            <div className="p-8 rounded-2xl bg-slate-800/50 border border-slate-700/60">
-              <GraduationCap className="w-8 h-8 text-violet-400 mb-4" />
-              <h3 className="text-lg font-bold text-white mb-2">For Students</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Permanent ownership of digital certificates, downloadable high-res PDFs, shareable verification links, and Polygon block explorer proof.
-              </p>
-            </div>
-
-            <div className="p-8 rounded-2xl bg-slate-800/50 border border-slate-700/60">
-              <Briefcase className="w-8 h-8 text-emerald-400 mb-4" />
-              <h3 className="text-lg font-bold text-white mb-2">For Employers</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Zero friction background checks. Scan QR codes or query candidate Certificate IDs without needing a Web3 wallet or crypto gas funds.
-              </p>
+              <h4 className="font-extrabold text-white text-sm">Instant Public Verification</h4>
+              <p className="text-xs text-slate-400">Employers scan QR code or query Certificate ID for immediate zero-wallet verification.</p>
             </div>
           </div>
         </div>
@@ -214,3 +179,4 @@ export default function LandingPage() {
     </div>
   );
 }
+

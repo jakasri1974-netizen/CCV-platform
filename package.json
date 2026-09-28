@@ -10,6 +10,8 @@
     "deploy:local": "cd blockchain && npx hardhat run scripts/deploy.js --network localhost",
     "node:local": "cd blockchain && npx hardhat node",
     "seed:backend": "cd backend && node seed.js",
+    "create-admin": "cd backend && npm run create-admin",
+    "create:admin": "cd backend && npm run create-admin",
     "start:backend": "cd backend && npm start",
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",

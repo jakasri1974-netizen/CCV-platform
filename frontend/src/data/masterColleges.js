@@ -1,0 +1,16 @@
+export const MASTER_COLLEGES = [
+  { id: "COL-ACET", code: "7301", name: "Aishwarya College of Engineering and Technology", district: "Erode", searchTerms: "Aishwarya Erode ACET" },
+  { id: "COL-ALAMEEN", code: "7303", name: "Al-Ameen Engineering College", district: "Erode", searchTerms: "Al-Ameen Al Ameen Erode" },
+  { id: "COL-BIT", code: "7304", name: "Bannari Amman Institute of Technology", district: "Erode", searchTerms: "Bannari Amman BIT Sathyamangalam Erode" },
+  { id: "COL-ESEC", code: "7308", name: "Erode Sengunthar Engineering College", district: "Erode", searchTerms: "Erode Sengunthar ESEC Perundurai" },
+  { id: "COL-GCEE", code: "7311", name: "Government College of Engineering, Erode", district: "Erode", searchTerms: "Government College of Engineering Erode IRTT GCEE" },
+  { id: "COL-JKKM", code: "7313", name: "J.K.K. Munirajah College of Technology", district: "Erode", searchTerms: "JKK Munirajah JKKM Erode" },
+  { id: "COL-KONGU", code: "7314", name: "Kongu Engineering College", district: "Erode", searchTerms: "Kongu KEC Perundurai Erode" },
+  { id: "COL-MPNMJ", code: "7317", name: "M.P. Nachimuthu M. Jaganathan Engineering College", district: "Erode", searchTerms: "MPNMJ Nachimuthu Jaganathan Erode" },
+  { id: "COL-NCT", code: "7322", name: "Nandha College of Technology", district: "Erode", searchTerms: "Nandha College of Technology NCT Erode" },
+  { id: "COL-NEC", code: "7323", name: "Nandha Engineering College", district: "Erode", searchTerms: "Nandha Engineering College NEC Erode" },
+  { id: "COL-SVHEC", code: "7329", name: "Shree Venkateshwara Hi-Tech Engineering College", district: "Erode", searchTerms: "Shree Venkateshwara Hi-Tech SVHEC Erode" },
+  { id: "COL-SEC", code: "7332", name: "Surya Engineering College", district: "Erode", searchTerms: "Surya SEC Erode" },
+  { id: "COL-VCET", code: "7335", name: "Velalar College of Engineering and Technology", district: "Erode", searchTerms: "Velalar VCET Thindal Erode" },
+  { id: "COL-HCE", code: "7338", name: "Hindusthan College of Engineering, Chennimalai/Ingur", district: "Erode", searchTerms: "Hindusthan Chennimalai Ingur HCE Erode" },
+];

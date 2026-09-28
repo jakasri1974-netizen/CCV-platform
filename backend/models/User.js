@@ -8,7 +8,7 @@ const UserSchema = new mongoose.Schema(
     passwordHash: { type: String, required: true },
     role: {
       type: String,
-      enum: ["super_admin", "college_admin", "student"],
+      enum: ["admin", "super_admin", "college_admin", "student"],
       default: "college_admin",
     },
     emailVerified: { type: Boolean, default: false },

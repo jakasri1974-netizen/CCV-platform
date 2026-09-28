@@ -9,7 +9,13 @@ const connectDB = async () => {
     });
     console.log(`✅ MongoDB Connected to: ${mongoose.connection.host || "Local DB"}`);
   } catch (err) {
-    console.warn(`⚠️ Standard MongoDB connection failed (${err.message}). Starting In-Memory Mongo Server...`);
+    if (process.env.NODE_ENV === "production") {
+      console.error(`❌ CRITICAL PRODUCTION DATABASE ERROR: MongoDB Atlas connection failed (${err.message}).`);
+      console.error(`   Ensure MONGODB_URI is properly configured and database IP whitelist permits access.`);
+      process.exit(1);
+    }
+
+    console.warn(`⚠️ Standard MongoDB connection failed (${err.message}). Starting In-Memory Mongo Server (DEV ONLY)...`);
     try {
       const { MongoMemoryServer } = require("mongodb-memory-server");
       const mongoServer = await MongoMemoryServer.create({
@@ -21,7 +27,7 @@ const connectDB = async () => {
       await mongoose.connect(mongoUri);
       console.log(`✅ In-Memory MongoDB Connected at: ${mongoUri}`);
     } catch (memErr) {
-      console.warn(`⚠️ In-Memory MongoDB download failed. Application will run in memory fallback mode.`);
+      console.warn(`⚠️ In-Memory MongoDB download failed: ${memErr.message}`);
     }
   }
 };

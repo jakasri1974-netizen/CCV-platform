@@ -97,6 +97,14 @@ const getStudentById = async (req, res, next) => {
     if (!student) {
       return res.status(404).json({ success: false, message: "Student record not found" });
     }
+
+    // Student isolation check: student role can only view their own record
+    if (req.user && req.user.role === "student") {
+      if (!req.user.studentRef || String(req.user.studentRef) !== String(student._id)) {
+        return res.status(403).json({ success: false, message: "Access forbidden. Students may only view their own profile and records." });
+      }
+    }
+
     res.json({ success: true, data: student });
   } catch (err) {
     next(err);

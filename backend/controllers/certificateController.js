@@ -4,6 +4,7 @@ const Course = require("../models/Course");
 const { generateCertificateHash } = require("../services/hashService");
 const { generateCertificatePDF } = require("../services/pdfService");
 const { generateQRCodeDataURI } = require("../services/qrService");
+const { revokeCertificateOnChain } = require("../services/blockchainService");
 
 // @desc Prepare certificate payload and calculate canonical hash
 // @route POST /api/certificates/prepare
@@ -235,29 +236,53 @@ const getCertificateById = async (req, res, next) => {
 // @route POST /api/certificates/:id/revoke
 const revokeCertificate = async (req, res, next) => {
   try {
-    const { transactionHash } = req.body;
-    const cert = await Certificate.findOne({
-      $or: [{ _id: req.params.id }, { certificateId: req.params.id }],
-    });
+    const { transactionHash, reason } = req.body;
+    const certId = req.params.id;
+    const Document = require("../models/Document");
 
+    let cert = null;
+    if (require("mongoose").Types.ObjectId.isValid(certId)) {
+      cert = await Certificate.findById(certId);
+    }
     if (!cert) {
-      return res.status(404).json({ success: false, message: "Certificate not found" });
+      cert = await Certificate.findOne({ certificateId: certId });
     }
 
-    if (cert.status === "REVOKED") {
+    let doc = null;
+    if (!cert) {
+      doc = await Document.findOne({
+        $or: [{ certificateId: certId }, { documentId: certId }],
+      });
+    }
+
+    if (!cert && !doc) {
+      return res.status(404).json({ success: false, message: "Certificate record not found" });
+    }
+
+    const targetRecord = cert || doc;
+    if (targetRecord.status === "REVOKED") {
       return res.status(400).json({ success: false, message: "Certificate is already revoked" });
     }
 
-    cert.status = "REVOKED";
-    if (transactionHash) {
-      cert.transactionHash = transactionHash;
+    // Submit revocation transaction via backend RPC signer
+    let chainTxHash = transactionHash;
+    if (!chainTxHash) {
+      const targetCertId = targetRecord.certificateId || certId;
+      const chainRes = await revokeCertificateOnChain(targetCertId);
+      if (chainRes && chainRes.transactionHash) {
+        chainTxHash = chainRes.transactionHash;
+      }
     }
-    await cert.save();
+
+    targetRecord.status = "REVOKED";
+    if (reason) targetRecord.revocationReason = reason;
+    if (chainTxHash) targetRecord.transactionHash = chainTxHash;
+    await targetRecord.save();
 
     res.json({
       success: true,
-      message: "Certificate has been marked as REVOKED",
-      data: cert,
+      message: "Certificate has been marked as REVOKED on-chain and in database",
+      data: targetRecord,
     });
   } catch (err) {
     next(err);

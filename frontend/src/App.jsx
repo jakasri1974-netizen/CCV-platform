@@ -13,11 +13,15 @@ import SetupPasswordPage from './pages/SetupPasswordPage';
 import EmployerVerify from './pages/EmployerVerify';
 import AdminDashboard from './pages/AdminDashboard';
 import CollegesPage from './pages/CollegesPage';
+import DepartmentsPage from './pages/DepartmentsPage';
 import BatchManagementPage from './pages/BatchManagementPage';
 import StudentsPage from './pages/StudentsPage';
 import CoursesPage from './pages/CoursesPage';
 import IssueCertificatePage from './pages/IssueCertificatePage';
 import CertificatesListPage from './pages/CertificatesListPage';
+import ReportsPage from './pages/ReportsPage';
+import AuditLogsPage from './pages/AuditLogsPage';
+import SettingsPage from './pages/SettingsPage';
 import BlockchainPage from './pages/BlockchainPage';
 import StudentDashboard from './pages/StudentDashboard';
 
@@ -57,11 +61,15 @@ export default function App() {
             {/* Admin Routes */}
             <Route path="/admin/dashboard" element={<ProtectedAdminRoute><AdminDashboard /></ProtectedAdminRoute>} />
             <Route path="/admin/colleges" element={<ProtectedAdminRoute><CollegesPage /></ProtectedAdminRoute>} />
+            <Route path="/admin/departments" element={<ProtectedAdminRoute><DepartmentsPage /></ProtectedAdminRoute>} />
             <Route path="/admin/batches" element={<ProtectedAdminRoute><BatchManagementPage /></ProtectedAdminRoute>} />
             <Route path="/admin/students" element={<ProtectedAdminRoute><StudentsPage /></ProtectedAdminRoute>} />
             <Route path="/admin/courses" element={<ProtectedAdminRoute><CoursesPage /></ProtectedAdminRoute>} />
             <Route path="/admin/issue" element={<ProtectedAdminRoute><IssueCertificatePage /></ProtectedAdminRoute>} />
             <Route path="/admin/certificates" element={<ProtectedAdminRoute><CertificatesListPage /></ProtectedAdminRoute>} />
+            <Route path="/admin/reports" element={<ProtectedAdminRoute><ReportsPage /></ProtectedAdminRoute>} />
+            <Route path="/admin/audit-logs" element={<ProtectedAdminRoute><AuditLogsPage /></ProtectedAdminRoute>} />
+            <Route path="/admin/settings" element={<ProtectedAdminRoute><SettingsPage /></ProtectedAdminRoute>} />
             <Route path="/admin/blockchain" element={<ProtectedAdminRoute><BlockchainPage /></ProtectedAdminRoute>} />
 
             {/* Student Portal Routes */}
@@ -75,3 +83,4 @@ export default function App() {
     </BrowserRouter>
   );
 }
+
