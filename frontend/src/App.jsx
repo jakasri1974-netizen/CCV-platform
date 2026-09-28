@@ -12,23 +12,31 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 import SetupPasswordPage from './pages/SetupPasswordPage';
 import EmployerVerify from './pages/EmployerVerify';
 import AdminDashboard from './pages/AdminDashboard';
-import CollegesPage from './pages/CollegesPage';
-import DepartmentsPage from './pages/DepartmentsPage';
-import BatchManagementPage from './pages/BatchManagementPage';
-import StudentsPage from './pages/StudentsPage';
-import CoursesPage from './pages/CoursesPage';
 import IssueCertificatePage from './pages/IssueCertificatePage';
-import CertificatesListPage from './pages/CertificatesListPage';
+import StudentsPage from './pages/StudentsPage';
+import ModulesPage from './pages/ModulesPage';
 import ReportsPage from './pages/ReportsPage';
 import AuditLogsPage from './pages/AuditLogsPage';
 import SettingsPage from './pages/SettingsPage';
-import BlockchainPage from './pages/BlockchainPage';
 import StudentDashboard from './pages/StudentDashboard';
+import StudentProfilePage from './pages/StudentProfilePage';
+
+// Deep/Fallback routes retained for internal backward compatibility
+import CollegesPage from './pages/CollegesPage';
+import DepartmentsPage from './pages/DepartmentsPage';
+import BatchManagementPage from './pages/BatchManagementPage';
+import CoursesPage from './pages/CoursesPage';
+import CertificatesListPage from './pages/CertificatesListPage';
+import BlockchainPage from './pages/BlockchainPage';
 
 function ProtectedAdminRoute({ children }) {
   const { user, loading } = useAuth();
-  if (loading) return <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center">Loading session...</div>;
-  if (!user || (user.role !== 'admin' && user.role !== 'super_admin' && user.role !== 'college_admin')) {
+  if (loading) return <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center font-sans text-xs">Loading session...</div>;
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.role === 'student') {
+    return <Navigate to="/student/dashboard" replace />;
+  }
+  if (user.role !== 'admin' && user.role !== 'super_admin' && user.role !== 'college_admin') {
     return <Navigate to="/login" replace />;
   }
   return children;
@@ -36,7 +44,7 @@ function ProtectedAdminRoute({ children }) {
 
 function ProtectedStudentRoute({ children }) {
   const { user, loading } = useAuth();
-  if (loading) return <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center">Loading session...</div>;
+  if (loading) return <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center font-sans text-xs">Loading session...</div>;
   if (!user) return <Navigate to="/login" replace />;
   return children;
 }
@@ -58,22 +66,27 @@ export default function App() {
             <Route path="/verify" element={<EmployerVerify />} />
             <Route path="/verify/:certificateId" element={<EmployerVerify />} />
 
-            {/* Admin Routes */}
+            {/* Admin College Credential System Routes */}
             <Route path="/admin/dashboard" element={<ProtectedAdminRoute><AdminDashboard /></ProtectedAdminRoute>} />
-            <Route path="/admin/colleges" element={<ProtectedAdminRoute><CollegesPage /></ProtectedAdminRoute>} />
-            <Route path="/admin/departments" element={<ProtectedAdminRoute><DepartmentsPage /></ProtectedAdminRoute>} />
-            <Route path="/admin/batches" element={<ProtectedAdminRoute><BatchManagementPage /></ProtectedAdminRoute>} />
-            <Route path="/admin/students" element={<ProtectedAdminRoute><StudentsPage /></ProtectedAdminRoute>} />
-            <Route path="/admin/courses" element={<ProtectedAdminRoute><CoursesPage /></ProtectedAdminRoute>} />
             <Route path="/admin/issue" element={<ProtectedAdminRoute><IssueCertificatePage /></ProtectedAdminRoute>} />
-            <Route path="/admin/certificates" element={<ProtectedAdminRoute><CertificatesListPage /></ProtectedAdminRoute>} />
+            <Route path="/admin/students" element={<ProtectedAdminRoute><StudentsPage /></ProtectedAdminRoute>} />
+            <Route path="/admin/modules" element={<ProtectedAdminRoute><ModulesPage /></ProtectedAdminRoute>} />
             <Route path="/admin/reports" element={<ProtectedAdminRoute><ReportsPage /></ProtectedAdminRoute>} />
             <Route path="/admin/audit-logs" element={<ProtectedAdminRoute><AuditLogsPage /></ProtectedAdminRoute>} />
             <Route path="/admin/settings" element={<ProtectedAdminRoute><SettingsPage /></ProtectedAdminRoute>} />
+
+            {/* Internal Master Data Routes (Kept intact internally) */}
+            <Route path="/admin/colleges" element={<ProtectedAdminRoute><CollegesPage /></ProtectedAdminRoute>} />
+            <Route path="/admin/departments" element={<ProtectedAdminRoute><DepartmentsPage /></ProtectedAdminRoute>} />
+            <Route path="/admin/batches" element={<ProtectedAdminRoute><BatchManagementPage /></ProtectedAdminRoute>} />
+            <Route path="/admin/courses" element={<ProtectedAdminRoute><CoursesPage /></ProtectedAdminRoute>} />
+            <Route path="/admin/certificates" element={<ProtectedAdminRoute><CertificatesListPage /></ProtectedAdminRoute>} />
             <Route path="/admin/blockchain" element={<ProtectedAdminRoute><BlockchainPage /></ProtectedAdminRoute>} />
 
             {/* Student Portal Routes */}
             <Route path="/student/dashboard" element={<ProtectedStudentRoute><StudentDashboard /></ProtectedStudentRoute>} />
+            <Route path="/student/profile" element={<ProtectedStudentRoute><StudentProfilePage /></ProtectedStudentRoute>} />
+            <Route path="/student/certificates" element={<ProtectedStudentRoute><StudentDashboard /></ProtectedStudentRoute>} />
 
             {/* Fallback Redirect */}
             <Route path="*" element={<Navigate to="/" replace />} />
@@ -83,4 +96,3 @@ export default function App() {
     </BrowserRouter>
   );
 }
-

@@ -12,13 +12,11 @@ const { protect } = require("../middleware/authMiddleware");
 const { authorize } = require("../middleware/roleMiddleware");
 
 router.get("/:courseId/batches", getBatches);
+router.get("/", getCourses);
 
 router.use(protect);
 
-router
-  .route("/")
-  .get(getCourses)
-  .post(authorize("admin", "super_admin"), createCourse);
+router.post("/", authorize("admin", "super_admin"), createCourse);
 
 router
   .route("/:id")

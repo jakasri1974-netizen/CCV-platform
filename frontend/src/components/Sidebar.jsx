@@ -4,9 +4,6 @@ import { useAuth } from '../context/AuthContext';
 import {
   LayoutDashboard,
   Users,
-  Building,
-  Layers,
-  BookOpen,
   Award,
   PlusCircle,
   Search,
@@ -15,6 +12,7 @@ import {
   Settings,
   ShieldCheck,
   UserCheck,
+  LayoutGrid,
 } from 'lucide-react';
 
 export default function Sidebar({ isOpen = true, onClose = () => {} }) {
@@ -24,12 +22,9 @@ export default function Sidebar({ isOpen = true, onClose = () => {} }) {
 
   const adminNav = [
     { name: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
-    { name: 'Students', path: '/admin/students', icon: Users },
-    { name: 'Colleges', path: '/admin/colleges', icon: Building },
-    { name: 'Departments', path: '/admin/departments', icon: Layers },
-    { name: 'Courses', path: '/admin/courses', icon: BookOpen },
-    { name: 'Certificates', path: '/admin/certificates', icon: Award },
     { name: 'Issue Certificate', path: '/admin/issue', icon: PlusCircle },
+    { name: 'Student Details', path: '/admin/students', icon: Users },
+    { name: 'Modules', path: '/admin/modules', icon: LayoutGrid },
     { name: 'Verify Certificate', path: '/verify', icon: Search },
     { name: 'Reports', path: '/admin/reports', icon: BarChart3 },
     { name: 'Audit Logs', path: '/admin/audit-logs', icon: ClipboardList },
@@ -37,9 +32,10 @@ export default function Sidebar({ isOpen = true, onClose = () => {} }) {
   ];
 
   const studentNav = [
-    { name: 'My Profile', path: '/student/dashboard', icon: UserCheck },
-    { name: 'My Certificates', path: '/student/dashboard#certificates', icon: Award },
-    { name: 'Verify Certificate', path: '/verify', icon: Search },
+    { name: 'Student Dashboard', path: '/student/dashboard', icon: LayoutDashboard },
+    { name: 'My Profile', path: '/student/profile', icon: UserCheck },
+    { name: 'My Certificates', path: '/student/certificates', icon: Award },
+    { name: 'Verify / Share', path: '/verify', icon: Search },
   ];
 
   const navItems = isAdmin ? adminNav : studentNav;

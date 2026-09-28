@@ -33,7 +33,7 @@ module.exports = {
       chainId: 80002,
     },
     polygon: {
-      url: process.env.POLYGON_MAINNET_RPC_URL || "https://polygon-rpc.com",
+      url: process.env.POLYGON_MAINNET_RPC_URL || "https://1rpc.io/matic",
       accounts: [PRIVATE_KEY],
       chainId: 137,
     },

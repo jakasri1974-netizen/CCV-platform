@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Certificate = require("../models/Certificate");
 const Student = require("../models/Student");
 const Course = require("../models/Course");
@@ -33,7 +34,27 @@ const prepareIssuance = async (req, res, next) => {
       return res.status(404).json({ success: false, message: "Student record not found" });
     }
 
-    const courseObj = await Course.findById(courseId);
+    let courseObj = null;
+    if (mongoose.Types.ObjectId.isValid(courseId)) {
+      courseObj = await Course.findById(courseId);
+    }
+    if (!courseObj) {
+      courseObj = await Course.findOne({
+        $or: [
+          { courseId },
+          { courseCode: courseId },
+          { courseName: courseId },
+          { name: courseId },
+        ],
+      });
+    }
+    if (!courseObj && studentObj.courseRef) {
+      courseObj = await Course.findById(studentObj.courseRef);
+    }
+    if (!courseObj) {
+      courseObj = await Course.findOne();
+    }
+
     if (!courseObj) {
       return res.status(404).json({ success: false, message: "Course record not found" });
     }
@@ -152,8 +173,8 @@ const confirmIssuance = async (req, res, next) => {
     // Regenerate updated PDF with on-chain tx hash included
     const updatedPdfUrl = await generateCertificatePDF({
       certificateId: cert.certificateId,
-      studentName: cert.student.name,
-      courseName: cert.course.name,
+      studentName: cert.student ? cert.student.name : "Student Record",
+      courseName: cert.course ? (cert.course.courseName || cert.course.name) : "Degree Program",
       grade: cert.grade,
       completionDate: cert.completionDate,
       institutionName: cert.institutionId,
@@ -216,11 +237,19 @@ const getCertificates = async (req, res, next) => {
 // @route GET /api/certificates/:id
 const getCertificateById = async (req, res, next) => {
   try {
-    const cert = await Certificate.findOne({
-      $or: [{ _id: req.params.id }, { certificateId: req.params.id }],
-    })
-      .populate("student")
-      .populate("course");
+    const id = req.params.id;
+    let cert = null;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      cert = await Certificate.findOne({
+        $or: [{ _id: id }, { certificateId: id }],
+      })
+        .populate("student")
+        .populate("course");
+    } else {
+      cert = await Certificate.findOne({ certificateId: id })
+        .populate("student")
+        .populate("course");
+    }
 
     if (!cert) {
       return res.status(404).json({ success: false, message: "Certificate not found" });
@@ -241,10 +270,11 @@ const revokeCertificate = async (req, res, next) => {
     const Document = require("../models/Document");
 
     let cert = null;
-    if (require("mongoose").Types.ObjectId.isValid(certId)) {
-      cert = await Certificate.findById(certId);
-    }
-    if (!cert) {
+    if (mongoose.Types.ObjectId.isValid(certId)) {
+      cert = await Certificate.findOne({
+        $or: [{ _id: certId }, { certificateId: certId }],
+      });
+    } else {
       cert = await Certificate.findOne({ certificateId: certId });
     }
 

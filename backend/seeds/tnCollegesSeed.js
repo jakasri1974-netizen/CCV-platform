@@ -15,7 +15,9 @@ async function seedTamilNaduColleges() {
   console.log("🏫 SEEDING TAMIL NADU MASTER COLLEGES & COURSES DATASET");
   console.log("====================================================");
 
-  await connectDB();
+  if (mongoose.connection.readyState !== 1) {
+    await connectDB();
+  }
 
   console.log("Clearing existing master dataset & user accounts...");
   await College.deleteMany({});

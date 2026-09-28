@@ -2,6 +2,7 @@ const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const User = require("../models/User");
+const Student = require("../models/Student");
 const emailService = require("../services/emailService");
 
 const generateToken = (id) => {
@@ -107,21 +108,37 @@ const verifyEmail = async (req, res, next) => {
   }
 };
 
-// @desc Login user with email & password
+// @desc Login user with email or studentId & password
 // @route POST /api/auth/login
 const loginUser = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const { email, studentId, password, identifier } = req.body;
+    const loginIdentifier = (identifier || email || studentId || "").trim().toLowerCase();
 
-    if (!email || !password) {
-      return res.status(400).json({ success: false, message: "Please enter your email and password" });
+    if (!loginIdentifier || !password) {
+      return res.status(400).json({ success: false, message: "Please enter your Student ID / Email and password" });
     }
 
-    const cleanEmail = email.trim().toLowerCase();
-    const user = await User.findOne({ email: cleanEmail }).populate("studentRef collegeRef");
+    // Try finding user by email first
+    let user = await User.findOne({ email: loginIdentifier }).populate("studentRef collegeRef");
+
+    // If not found by email, check if studentId or registerNumber matches a Student record
+    if (!user) {
+      const student = await Student.findOne({
+        $or: [
+          { studentId: { $regex: `^${loginIdentifier}$`, $options: "i" } },
+          { registerNumber: { $regex: `^${loginIdentifier}$`, $options: "i" } },
+        ],
+      });
+      if (student) {
+        user = await User.findOne({
+          $or: [{ studentRef: student._id }, { email: student.email.toLowerCase() }],
+        }).populate("studentRef collegeRef");
+      }
+    }
 
     if (!user || !(await user.comparePassword(password))) {
-      return res.status(401).json({ success: false, message: "Invalid email address or password" });
+      return res.status(401).json({ success: false, message: "Invalid Student ID / Email address or password" });
     }
 
     if (!user.emailVerified) {

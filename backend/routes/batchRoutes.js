@@ -11,10 +11,11 @@ const { getStudents } = require("../controllers/studentController");
 const { protect } = require("../middleware/authMiddleware");
 
 router.get("/:batchId/students", getStudents);
+router.get("/", getBatches);
 
 router.use(protect);
 
-router.route("/").get(getBatches).post(createBatch);
+router.post("/", createBatch);
 
 router.get("/:batchId", getBatchById);
 router.post("/:batchId/generate-root", generateBatchMerkleRoot);

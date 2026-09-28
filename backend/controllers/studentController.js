@@ -4,6 +4,7 @@ const College = require("../models/College");
 const Department = require("../models/Department");
 const Course = require("../models/Course");
 const Batch = require("../models/Batch");
+const User = require("../models/User");
 
 // @desc Get students with cascading query filters & server-side pagination for 8000+ records
 // @route GET /api/students or GET /api/batches/:batchId/students
@@ -125,6 +126,7 @@ const createStudent = async (req, res, next) => {
       departmentId,
       courseId,
       batchId,
+      password,
     } = req.body;
 
     if (!registerNumber || !name || !email) {
@@ -136,6 +138,7 @@ const createStudent = async (req, res, next) => {
 
     const cleanReg = registerNumber.trim().toUpperCase();
     if (!studentId) studentId = `STU-${cleanReg}`;
+    const cleanEmail = email.trim().toLowerCase();
 
     const existing = await Student.findOne({
       $or: [{ studentId }, { registerNumber: cleanReg }],
@@ -170,7 +173,7 @@ const createStudent = async (req, res, next) => {
       studentId,
       registerNumber: cleanReg,
       name: name.trim(),
-      email: email.trim().toLowerCase(),
+      email: cleanEmail,
       phone: phone || "",
       college: colObj ? colObj._id : null,
       departmentRef: deptObj ? deptObj._id : null,
@@ -183,6 +186,28 @@ const createStudent = async (req, res, next) => {
       batch: bchObj ? bchObj.name : "2023-2027",
       graduationYear: bchObj ? bchObj.endYear : 2027,
     });
+
+    // Create or update linked User account for Student Portal login
+    const initialPassword = password || "Student@123";
+    let userAcc = await User.findOne({ email: cleanEmail });
+    if (!userAcc) {
+      await User.create({
+        name: student.name,
+        email: cleanEmail,
+        passwordHash: initialPassword,
+        role: "student",
+        emailVerified: true,
+        studentRef: student._id,
+        collegeRef: colObj ? colObj._id : null,
+        status: "ACTIVE",
+      });
+    } else {
+      userAcc.studentRef = student._id;
+      userAcc.role = "student";
+      userAcc.emailVerified = true;
+      if (password) userAcc.passwordHash = password;
+      await userAcc.save();
+    }
 
     res.status(201).json({ success: true, data: student });
   } catch (err) {
@@ -329,7 +354,50 @@ const updateStudent = async (req, res, next) => {
     if (!student) {
       return res.status(404).json({ success: false, message: "Student record not found" });
     }
+
+    // Sync email or password to linked User account if provided
+    if (req.body.email || req.body.password || req.body.name) {
+      const user = await User.findOne({ $or: [{ studentRef: student._id }, { email: student.email }] });
+      if (user) {
+        if (req.body.name) user.name = req.body.name;
+        if (req.body.email) user.email = req.body.email.trim().toLowerCase();
+        if (req.body.password) user.passwordHash = req.body.password;
+        await user.save();
+      }
+    }
+
     res.json({ success: true, data: student });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc Update student self profile (safe fields: phone, password)
+// @route PUT /api/students/profile/me
+const updateSelfProfile = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id).populate("studentRef");
+    if (!user || !user.studentRef) {
+      return res.status(400).json({ success: false, message: "No linked student record found for current user" });
+    }
+
+    const { phone, password } = req.body;
+    const student = await Student.findById(user.studentRef._id || user.studentRef);
+    if (!student) {
+      return res.status(404).json({ success: false, message: "Student profile not found" });
+    }
+
+    if (phone !== undefined) {
+      student.phone = phone;
+      await student.save();
+    }
+
+    if (password) {
+      user.passwordHash = password;
+      await user.save();
+    }
+
+    res.json({ success: true, message: "Student profile updated successfully", data: student });
   } catch (err) {
     next(err);
   }
@@ -343,6 +411,9 @@ const deleteStudent = async (req, res, next) => {
     if (!student) {
       return res.status(404).json({ success: false, message: "Student record not found" });
     }
+
+    await User.deleteMany({ studentRef: student._id });
+
     res.json({ success: true, message: "Student deleted successfully" });
   } catch (err) {
     next(err);
@@ -355,5 +426,6 @@ module.exports = {
   createStudent,
   importStudentsCsv,
   updateStudent,
+  updateSelfProfile,
   deleteStudent,
 };

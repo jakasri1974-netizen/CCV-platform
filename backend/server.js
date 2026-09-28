@@ -8,6 +8,7 @@ require("dotenv").config({ path: path.join(__dirname, "../.env") });
 const connectDB = require("./config/db");
 const errorHandler = require("./middleware/errorHandler");
 const College = require("./models/College");
+const Course = require("./models/Course");
 const seedMasterData = require("./seed");
 
 const authRoutes = require("./routes/authRoutes");
@@ -74,8 +75,9 @@ const PORT = process.env.PORT || 5000;
 connectDB().then(async () => {
   try {
     const collegeCount = await College.countDocuments();
-    if (collegeCount === 0) {
-      console.log("Database empty. Auto-seeding master college hierarchy...");
+    const courseCount = await Course.countDocuments();
+    if (collegeCount === 0 || courseCount === 0) {
+      console.log("Database incomplete. Auto-seeding master college & course dataset...");
       await seedMasterData();
     }
   } catch (e) {

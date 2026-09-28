@@ -67,36 +67,43 @@ export default function AdminDashboard() {
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={fetchStats}
-                isLoading={loading}
-                icon={RefreshCw}
-              >
-                Refresh
-              </Button>
+            <div className="flex flex-wrap items-center gap-2">
               <Button
                 variant="primary"
                 size="sm"
                 to="/admin/issue"
                 icon={PlusCircle}
               >
-                Issue Certificate
+                + Issue Certificate
+              </Button>
+              <Button
+                variant="success"
+                size="sm"
+                to="/admin/students"
+                icon={Users}
+              >
+                + Add Student
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                to="/verify"
+                icon={ShieldCheck}
+              >
+                Verify Certificate
               </Button>
             </div>
           </div>
 
-          {/* Metric Cards Grid */}
+          {/* College Level Metric Cards Grid */}
           {loading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-              {Array.from({ length: 8 }).map((_, i) => (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+              {Array.from({ length: 5 }).map((_, i) => (
                 <CardSkeleton key={i} />
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
               <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
                 <div className="flex items-center justify-between text-slate-400 mb-2">
                   <span className="text-xs font-semibold">Total Students</span>
@@ -104,36 +111,6 @@ export default function AdminDashboard() {
                 </div>
                 <div className="text-2xl font-black text-slate-900">
                   {stats?.stats?.totalStudents || 0}
-                </div>
-              </div>
-
-              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
-                <div className="flex items-center justify-between text-slate-400 mb-2">
-                  <span className="text-xs font-semibold">Total Colleges</span>
-                  <Building className="w-4 h-4 text-indigo-600" />
-                </div>
-                <div className="text-2xl font-black text-slate-900">
-                  {stats?.stats?.totalColleges || 14}
-                </div>
-              </div>
-
-              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
-                <div className="flex items-center justify-between text-slate-400 mb-2">
-                  <span className="text-xs font-semibold">Total Departments</span>
-                  <Layers className="w-4 h-4 text-indigo-600" />
-                </div>
-                <div className="text-2xl font-black text-slate-900">
-                  {stats?.stats?.totalDepartments || 8}
-                </div>
-              </div>
-
-              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
-                <div className="flex items-center justify-between text-slate-400 mb-2">
-                  <span className="text-xs font-semibold">Total Courses</span>
-                  <BookOpen className="w-4 h-4 text-indigo-600" />
-                </div>
-                <div className="text-2xl font-black text-slate-900">
-                  {stats?.stats?.totalCourses || 46}
                 </div>
               </div>
 

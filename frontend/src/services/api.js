@@ -60,6 +60,7 @@ export const studentApi = {
   create: (data) => apiRequest('/students', 'POST', data),
   importCsv: (data) => apiRequest('/students/import', 'POST', data),
   update: (id, data) => apiRequest(`/students/${id}`, 'PUT', data),
+  updateProfile: (data) => apiRequest('/students/profile/me', 'PUT', data),
   delete: (id) => apiRequest(`/students/${id}`, 'DELETE'),
 };
 

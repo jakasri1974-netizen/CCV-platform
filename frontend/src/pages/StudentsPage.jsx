@@ -10,7 +10,7 @@ import Badge from '../components/ui/Badge';
 import Pagination from '../components/ui/Pagination';
 import EmptyState from '../components/ui/EmptyState';
 import { TableSkeleton } from '../components/ui/Skeleton';
-import { studentApi, documentApi } from '../services/api';
+import { studentApi, documentApi, collegeApi, departmentApi, courseApi, certificateApi } from '../services/api';
 import {
   Users,
   Plus,
@@ -33,17 +33,27 @@ import {
   User,
   Phone,
   Hash,
+  Edit,
+  Award,
+  Lock,
+  Ban,
 } from 'lucide-react';
 
 export default function StudentsPage() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  // Cascading Selection State
+  // Master options for autocomplete
+  const [collegesList, setCollegesList] = useState([]);
+  const [departmentsList, setDepartmentsList] = useState([]);
+  const [coursesList, setCoursesList] = useState([]);
+
+  // Cascading Selection Filter State
   const [selectedCollege, setSelectedCollege] = useState(null);
   const [selectedDept, setSelectedDept] = useState(null);
   const [selectedCourse, setSelectedCourse] = useState(null);
@@ -51,44 +61,64 @@ export default function StudentsPage() {
 
   // Modal States
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState(null);
-  const [studentDocs, setStudentDocs] = useState([]);
-  const [loadingDocs, setLoadingDocs] = useState(false);
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isCertificatesModalOpen, setIsCertificatesModalOpen] = useState(false);
 
-  // Manual Add Form State
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [studentCerts, setStudentCerts] = useState([]);
+  const [loadingCerts, setLoadingCerts] = useState(false);
+
+  // Manual Add/Edit Form State
   const [studentForm, setStudentForm] = useState({
-    name: 'Sri Abhirami',
-    registerNumber: '23CSE001',
-    email: 'student@example.com',
-    phone: '+91 9876543210',
+    name: '',
+    studentId: '',
+    registerNumber: '',
+    email: '',
+    phone: '',
+    collegeName: '',
+    departmentName: '',
+    courseName: '',
+    batchName: '2023-2027',
+    password: '',
+    status: 'ACTIVE',
   });
 
   // Bulk CSV Import State
   const [csvContent, setCsvContent] = useState(
-    'registerNumber,name,email,department,course,batch\n23CSE004,Student Four,student4@example.com,CSE,B.E CSE,2023-2027\n23CSE005,Student Five,student5@example.com,CSE,B.E CSE,2023-2027\n23CSE006,Student Six,student6@example.com,CSE,B.E CSE,2023-2027'
+    'registerNumber,name,email,department,course,batch\n23CSE004,Student Four,student4@example.com,CSE,B.E CSE,2023-2027\n23CSE005,Student Five,student5@example.com,CSE,B.E CSE,2023-2027'
   );
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState(null);
 
-  // Form State for Document Upload
-  const [uploadForm, setUploadForm] = useState({
-    documentType: 'Semester Marksheet',
-    semester: 'Semester 1',
-    file: null,
-  });
-  const [uploading, setUploading] = useState(false);
-  const [uploadMessage, setUploadMessage] = useState(null);
+  useEffect(() => {
+    fetchMasterData();
+  }, []);
 
   useEffect(() => {
     fetchStudents();
-  }, [search, selectedCollege, selectedDept, selectedCourse, selectedBatch, page]);
+  }, [search, statusFilter, selectedCollege, selectedDept, selectedCourse, selectedBatch, page]);
+
+  const fetchMasterData = async () => {
+    try {
+      const [colRes, deptRes, crsRes] = await Promise.all([
+        collegeApi.getAll('limit=100'),
+        departmentApi.getAll('limit=100'),
+        courseApi.getAll('limit=100'),
+      ]);
+      if (colRes.success) setCollegesList(colRes.data);
+      if (deptRes.success) setDepartmentsList(deptRes.data);
+      if (crsRes.success) setCoursesList(crsRes.data);
+    } catch (err) {
+      console.error('Fetch master data error:', err);
+    }
+  };
 
   const fetchStudents = async () => {
     setLoading(true);
     try {
       let queryParams = `page=${page}&limit=50&search=${encodeURIComponent(search)}`;
+      if (statusFilter) queryParams += `&status=${statusFilter}`;
       if (selectedCollege) queryParams += `&collegeId=${selectedCollege._id}`;
       if (selectedDept) queryParams += `&departmentId=${selectedDept._id}`;
       if (selectedCourse) queryParams += `&courseId=${selectedCourse._id}`;
@@ -111,25 +141,58 @@ export default function StudentsPage() {
     e.preventDefault();
     try {
       const payload = {
-        ...studentForm,
+        name: studentForm.name,
+        registerNumber: studentForm.registerNumber || studentForm.studentId,
+        studentId: studentForm.studentId || `STU-${studentForm.registerNumber}`,
+        email: studentForm.email,
+        phone: studentForm.phone,
+        password: studentForm.password || 'Student@123',
         collegeId: selectedCollege?._id,
         departmentId: selectedDept?._id,
         courseId: selectedCourse?._id,
         batchId: selectedBatch?._id,
-        department: selectedDept?.departmentName || 'Computer Science and Engineering',
-        degree: selectedCourse?.courseName || 'B.E Computer Science and Engineering',
-        institution: selectedCollege?.collegeName || 'ABC Engineering College',
-        batch: selectedBatch?.name || '2023-2027',
+        department: studentForm.departmentName || selectedDept?.departmentName || 'Computer Science and Engineering',
+        degree: studentForm.courseName || selectedCourse?.courseName || 'B.E Computer Science and Engineering',
+        institution: studentForm.collegeName || selectedCollege?.collegeName || 'College of Engineering Guindy',
+        batch: studentForm.batchName || selectedBatch?.name || '2023-2027',
       };
 
       const res = await studentApi.create(payload);
       if (res.success) {
         setIsAddModalOpen(false);
-        setStudentForm({ name: '', registerNumber: '', email: '', phone: '' });
+        resetForm();
         fetchStudents();
       }
     } catch (err) {
       alert(err.message || 'Failed to create student');
+    }
+  };
+
+  const handleUpdateStudent = async (e) => {
+    e.preventDefault();
+    if (!selectedStudent) return;
+
+    try {
+      const payload = {
+        name: studentForm.name,
+        email: studentForm.email,
+        phone: studentForm.phone,
+        department: studentForm.departmentName,
+        degree: studentForm.courseName,
+        institution: studentForm.collegeName,
+        batch: studentForm.batchName,
+        status: studentForm.status,
+      };
+      if (studentForm.password) payload.password = studentForm.password;
+
+      const res = await studentApi.update(selectedStudent._id, payload);
+      if (res.success) {
+        setIsEditModalOpen(false);
+        resetForm();
+        fetchStudents();
+      }
+    } catch (err) {
+      alert(err.message || 'Failed to update student');
     }
   };
 
@@ -165,77 +228,65 @@ export default function StudentsPage() {
   };
 
   const handleDeleteStudent = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this student record?')) return;
+    if (!window.confirm('Are you sure you want to deactivate/delete this student record?')) return;
     try {
       await studentApi.delete(id);
-      if (selectedStudent?._id === id) setSelectedStudent(null);
       fetchStudents();
     } catch (err) {
       alert(err.message || 'Failed to delete student');
     }
   };
 
-  const openStudentProfile = async (student) => {
+  const openStudentCertificates = async (student) => {
     setSelectedStudent(student);
-    fetchStudentDocuments(student._id);
-  };
-
-  const fetchStudentDocuments = async (studentId) => {
-    setLoadingDocs(true);
+    setIsCertificatesModalOpen(true);
+    setLoadingCerts(true);
     try {
-      const res = await documentApi.getByStudent(studentId);
+      const res = await certificateApi.getAll(`studentId=${student._id}`);
       if (res.success) {
-        setStudentDocs(res.data);
-        if (res.student) {
-          setSelectedStudent(res.student);
-        }
+        setStudentCerts(res.data);
       }
     } catch (err) {
-      console.error('Fetch documents error:', err);
-      setStudentDocs([]);
+      console.error('Fetch student certificates error:', err);
+      setStudentCerts([]);
     } finally {
-      setLoadingDocs(false);
+      setLoadingCerts(false);
     }
   };
 
-  const handleDocumentUpload = async (e) => {
-    e.preventDefault();
-    if (!uploadForm.file) {
-      alert('Please select an academic PDF/image file to upload.');
-      return;
-    }
+  const openEditModal = (student) => {
+    setSelectedStudent(student);
+    setStudentForm({
+      name: student.name || '',
+      studentId: student.studentId || student.registerNumber || '',
+      registerNumber: student.registerNumber || '',
+      email: student.email || '',
+      phone: student.phone || '',
+      collegeName: student.institution || student.college?.collegeName || 'College of Engineering Guindy',
+      departmentName: student.department || 'Computer Science and Engineering',
+      courseName: student.degree || 'B.E Computer Science and Engineering',
+      batchName: student.batch || '2023-2027',
+      password: '',
+      status: student.status || 'ACTIVE',
+    });
+    setIsEditModalOpen(true);
+  };
 
-    setUploading(true);
-    setUploadMessage(null);
-
-    try {
-      const formData = new FormData();
-      formData.append('studentId', selectedStudent._id);
-      formData.append('documentType', uploadForm.documentType);
-      formData.append('semester', uploadForm.documentType === 'Final Degree Certificate' ? 'N/A' : uploadForm.semester);
-      formData.append('file', uploadForm.file);
-
-      const res = await documentApi.upload(formData);
-
-      if (res.success) {
-        setUploadMessage({
-          type: 'success',
-          text: `✅ Document Stored on IPFS! CID: ${res.data.ipfsCid}`,
-          data: res.data,
-        });
-        setUploadForm({ ...uploadForm, file: null });
-        fetchStudentDocuments(selectedStudent._id);
-        fetchStudents();
-        setTimeout(() => setIsUploadModalOpen(false), 2000);
-      }
-    } catch (err) {
-      setUploadMessage({
-        type: 'error',
-        text: `❌ Upload Failed: ${err.message}`,
-      });
-    } finally {
-      setUploading(false);
-    }
+  const resetForm = () => {
+    setSelectedStudent(null);
+    setStudentForm({
+      name: '',
+      studentId: '',
+      registerNumber: '',
+      email: '',
+      phone: '',
+      collegeName: '',
+      departmentName: '',
+      courseName: '',
+      batchName: '2023-2027',
+      password: '',
+      status: 'ACTIVE',
+    });
   };
 
   return (
@@ -245,19 +296,19 @@ export default function StudentsPage() {
       <div className="flex-1 flex">
         <Sidebar />
 
-        <main className="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6">
+        <main className="flex-1 p-4 sm:p-6 max-w-7xl mx-auto w-full space-y-6 overflow-x-hidden">
           {/* Top Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
             <div>
               <div className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-1">
-                Student Registry Management
+                College Credential Management
               </div>
               <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
                 <Users className="w-6 h-6 text-indigo-600" />
-                Student Roster & Verification Records
+                Student Details & Roster
               </h1>
               <p className="text-xs text-slate-500 mt-1">
-                Filter students by College ➔ Department ➔ Course ➔ Batch. Import bulk student rosters via CSV or register manually.
+                Manage student records, academic data fields, initial passwords, and certificate histories.
               </p>
             </div>
 
@@ -268,21 +319,21 @@ export default function StudentsPage() {
                 onClick={() => setIsImportModalOpen(true)}
                 icon={FileSpreadsheet}
               >
-                Bulk Import CSV
+                Import Students (CSV)
               </Button>
 
               <Button
                 variant="primary"
                 size="md"
-                onClick={() => setIsAddModalOpen(true)}
+                onClick={() => { resetForm(); setIsAddModalOpen(true); }}
                 icon={Plus}
               >
-                Add Student
+                + Add Student
               </Button>
             </div>
           </div>
 
-          {/* Cascading Hierarchy Selector */}
+          {/* Search & Cascading Hierarchy Filters */}
           <CascadingSelector
             selectedCollege={selectedCollege}
             setSelectedCollege={setSelectedCollege}
@@ -294,16 +345,26 @@ export default function StudentsPage() {
             setSelectedBatch={setSelectedBatch}
           />
 
-          {/* Search & Actions Bar */}
           <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
             <div className="relative flex-1 w-full">
               <Input
                 icon={Search}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by student name, register number, or Academic Record ID..."
+                placeholder="Search Student ID, Register Number, Name, or Email..."
               />
             </div>
+
+            <Select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-full sm:w-44 text-xs"
+              options={[
+                { label: 'All Statuses', value: '' },
+                { label: 'Active', value: 'ACTIVE' },
+                { label: 'Inactive / Suspended', value: 'SUSPENDED' },
+              ]}
+            />
 
             <Button
               variant="secondary"
@@ -313,7 +374,7 @@ export default function StudentsPage() {
               icon={RefreshCw}
               className="shrink-0"
             >
-              Load Batch Students ({totalCount})
+              Refresh ({totalCount})
             </Button>
           </div>
 
@@ -323,19 +384,21 @@ export default function StudentsPage() {
               <table className="w-full text-left text-xs">
                 <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200 uppercase tracking-wider text-[10px]">
                   <tr>
-                    <th className="p-3.5 pl-5">Register No</th>
-                    <th className="p-3.5">Full Name</th>
-                    <th className="p-3.5">Department & Degree</th>
-                    <th className="p-3.5">Institution</th>
+                    <th className="p-3.5 pl-5">Student ID</th>
+                    <th className="p-3.5">Name</th>
+                    <th className="p-3.5">College</th>
+                    <th className="p-3.5">Department</th>
+                    <th className="p-3.5">Course</th>
                     <th className="p-3.5">Batch</th>
-                    <th className="p-3.5">Academic Record ID</th>
+                    <th className="p-3.5">Email</th>
+                    <th className="p-3.5">Status</th>
                     <th className="p-3.5 pr-5 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
                   {loading ? (
                     <tr>
-                      <td colSpan="7" className="p-6">
+                      <td colSpan="9" className="p-6">
                         <TableSkeleton rows={5} />
                       </td>
                     </tr>
@@ -343,43 +406,48 @@ export default function StudentsPage() {
                     students.map((student) => (
                       <tr key={student._id} className="hover:bg-slate-50/80 transition">
                         <td className="p-3.5 pl-5 font-mono text-indigo-600 font-bold">
-                          {student.registerNumber}
+                          {student.registerNumber || student.studentId}
                         </td>
                         <td className="p-3.5 font-bold text-slate-900">
-                          <div>{student.name}</div>
-                          <div className="text-[11px] text-slate-500 font-normal">{student.email}</div>
+                          {student.name}
                         </td>
-                        <td className="p-3.5">
-                          <div className="text-slate-800">{student.degree || student.department}</div>
-                          <div className="text-[10px] text-slate-500">{student.department}</div>
+                        <td className="p-3.5 text-slate-600 truncate max-w-[150px]">
+                          {student.institution || student.college?.collegeName || 'Anna University'}
                         </td>
-                        <td className="p-3.5 text-slate-600">
-                          {student.institution || student.college?.collegeName || 'ABC Engineering College'}
+                        <td className="p-3.5 text-slate-600 truncate max-w-[130px]">
+                          {student.department}
+                        </td>
+                        <td className="p-3.5 text-slate-800 font-medium truncate max-w-[150px]">
+                          {student.degree}
                         </td>
                         <td className="p-3.5 font-mono text-slate-600">{student.batch}</td>
+                        <td className="p-3.5 text-slate-500 truncate max-w-[160px]">{student.email}</td>
                         <td className="p-3.5">
-                          {student.academicRecordId ? (
-                            <span className="inline-flex items-center gap-1 font-mono text-[11px] bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-lg border border-indigo-200 font-bold">
-                              <ShieldCheck className="w-3 h-3 text-indigo-600" />
-                              {student.academicRecordId}
-                            </span>
-                          ) : (
-                            <span className="text-slate-400 italic text-[11px]">Upload docs to generate</span>
-                          )}
+                          <Badge variant={student.status === 'SUSPENDED' ? 'rose' : 'emerald'}>
+                            {student.status || 'ACTIVE'}
+                          </Badge>
                         </td>
-                        <td className="p-3.5 pr-5 text-right space-x-1">
+                        <td className="p-3.5 pr-5 text-right space-x-1 whitespace-nowrap">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openEditModal(student)}
+                            icon={Edit}
+                            title="Edit Student"
+                          />
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => openStudentProfile(student)}
-                            icon={Eye}
+                            onClick={() => openStudentCertificates(student)}
+                            icon={Award}
+                            title="View Certificates"
                           >
-                            View Profile
+                            Certificates
                           </Button>
                           <button
                             onClick={() => handleDeleteStudent(student._id)}
                             className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
-                            title="Delete Student"
+                            title="Deactivate / Delete"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -388,10 +456,10 @@ export default function StudentsPage() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="7" className="p-8">
+                      <td colSpan="9" className="p-8">
                         <EmptyState
                           title="No Student Records Found"
-                          description="No student records match the selected hierarchy filter. Click '+ Add Student' or 'Bulk Import CSV' to populate records."
+                          description="No student records match the search filter. Click '+ Add Student' or 'Import Students (CSV)' to populate records."
                         />
                       </td>
                     </tr>
@@ -411,67 +479,197 @@ export default function StudentsPage() {
         </main>
       </div>
 
-      {/* Modal 1: Manual Add Student */}
+      {/* Modal 1: Add Student */}
       <Modal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        title="Register New Student"
-        subtitle={`Target: ${selectedCollege?.collegeName || 'ABC College'} • ${selectedBatch?.name || '2023-2027'}`}
+        title="Create New Student Account"
+        subtitle="Registers student data fields and creates a linked Student Portal login account"
+        maxWidth="max-w-xl"
       >
-        <form onSubmit={handleCreateStudent} className="space-y-4">
+        <form onSubmit={handleCreateStudent} className="space-y-4 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              label="Student Name"
+              icon={User}
+              required
+              value={studentForm.name}
+              onChange={(e) => setStudentForm({ ...studentForm, name: e.target.value })}
+              placeholder="e.g. Sri Abhirami"
+            />
+
+            <Input
+              label="Student ID / Register Number"
+              icon={Hash}
+              required
+              value={studentForm.registerNumber}
+              onChange={(e) => setStudentForm({ ...studentForm, registerNumber: e.target.value, studentId: `STU-${e.target.value}` })}
+              placeholder="e.g. 23CSE001"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              label="Student Email Address"
+              icon={Mail}
+              type="email"
+              required
+              value={studentForm.email}
+              onChange={(e) => setStudentForm({ ...studentForm, email: e.target.value })}
+              placeholder="e.g. student@example.com"
+            />
+
+            <Input
+              label="Phone Number"
+              icon={Phone}
+              value={studentForm.phone}
+              onChange={(e) => setStudentForm({ ...studentForm, phone: e.target.value })}
+              placeholder="e.g. +91 9876543210"
+            />
+          </div>
+
+          {/* Searchable Autocomplete Data Fields */}
           <Input
-            label="Full Student Name"
-            icon={User}
-            required
-            value={studentForm.name}
-            onChange={(e) => setStudentForm({ ...studentForm, name: e.target.value })}
-            placeholder="e.g. Sri Abhirami"
+            label="College / Institution"
+            value={studentForm.collegeName || selectedCollege?.collegeName || ''}
+            onChange={(e) => setStudentForm({ ...studentForm, collegeName: e.target.value })}
+            placeholder="Search or enter College Name..."
           />
 
-          <Input
-            label="Register Number"
-            icon={Hash}
-            required
-            value={studentForm.registerNumber}
-            onChange={(e) => setStudentForm({ ...studentForm, registerNumber: e.target.value })}
-            placeholder="e.g. 23CSE001"
-          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              label="Department"
+              value={studentForm.departmentName || selectedDept?.departmentName || ''}
+              onChange={(e) => setStudentForm({ ...studentForm, departmentName: e.target.value })}
+              placeholder="e.g. Computer Science and Engineering"
+            />
 
-          <Input
-            label="Student Email"
-            icon={Mail}
-            type="email"
-            required
-            value={studentForm.email}
-            onChange={(e) => setStudentForm({ ...studentForm, email: e.target.value })}
-            placeholder="e.g. student@example.com"
-          />
+            <Input
+              label="Course / Degree"
+              value={studentForm.courseName || selectedCourse?.courseName || ''}
+              onChange={(e) => setStudentForm({ ...studentForm, courseName: e.target.value })}
+              placeholder="e.g. B.E. Computer Science & Engineering"
+            />
+          </div>
 
-          <Input
-            label="Phone Number (Optional)"
-            icon={Phone}
-            value={studentForm.phone}
-            onChange={(e) => setStudentForm({ ...studentForm, phone: e.target.value })}
-            placeholder="e.g. +91 9876543210"
-          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              label="Batch"
+              value={studentForm.batchName}
+              onChange={(e) => setStudentForm({ ...studentForm, batchName: e.target.value })}
+              placeholder="e.g. 2023-2027"
+            />
 
-          <div className="pt-2 flex justify-end gap-2">
+            <Input
+              label="Set Initial Password"
+              type="password"
+              icon={Lock}
+              value={studentForm.password}
+              onChange={(e) => setStudentForm({ ...studentForm, password: e.target.value })}
+              placeholder="Default: Student@123"
+            />
+          </div>
+
+          <div className="pt-3 flex justify-end gap-2">
             <Button variant="ghost" onClick={() => setIsAddModalOpen(false)}>
               Cancel
             </Button>
             <Button type="submit" variant="primary">
-              Save Student Record
+              Create Student Account
             </Button>
           </div>
         </form>
       </Modal>
 
-      {/* Modal 2: Bulk CSV Import Modal */}
+      {/* Modal 2: Edit Student */}
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        title="Edit Student Record"
+        subtitle={selectedStudent ? `${selectedStudent.name} (${selectedStudent.registerNumber})` : ''}
+        maxWidth="max-w-xl"
+      >
+        <form onSubmit={handleUpdateStudent} className="space-y-4 text-xs">
+          <Input
+            label="Full Name"
+            icon={User}
+            required
+            value={studentForm.name}
+            onChange={(e) => setStudentForm({ ...studentForm, name: e.target.value })}
+          />
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              label="Email"
+              icon={Mail}
+              type="email"
+              required
+              value={studentForm.email}
+              onChange={(e) => setStudentForm({ ...studentForm, email: e.target.value })}
+            />
+
+            <Input
+              label="Phone"
+              icon={Phone}
+              value={studentForm.phone}
+              onChange={(e) => setStudentForm({ ...studentForm, phone: e.target.value })}
+            />
+          </div>
+
+          <Input
+            label="College / Institution"
+            value={studentForm.collegeName}
+            onChange={(e) => setStudentForm({ ...studentForm, collegeName: e.target.value })}
+          />
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              label="Department"
+              value={studentForm.departmentName}
+              onChange={(e) => setStudentForm({ ...studentForm, departmentName: e.target.value })}
+            />
+
+            <Input
+              label="Course / Degree"
+              value={studentForm.courseName}
+              onChange={(e) => setStudentForm({ ...studentForm, courseName: e.target.value })}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              label="Batch"
+              value={studentForm.batchName}
+              onChange={(e) => setStudentForm({ ...studentForm, batchName: e.target.value })}
+            />
+
+            <Input
+              label="Reset Password (Optional)"
+              type="password"
+              icon={Lock}
+              value={studentForm.password}
+              onChange={(e) => setStudentForm({ ...studentForm, password: e.target.value })}
+              placeholder="Leave blank to keep unchanged"
+            />
+          </div>
+
+          <div className="pt-3 flex justify-end gap-2">
+            <Button variant="ghost" onClick={() => setIsEditModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" variant="primary">
+              Save Changes
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Modal 3: Bulk CSV Import */}
       <Modal
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
         title="Bulk Import Student Roster (CSV)"
-        subtitle={`Import roster for ${selectedCollege?.collegeName || 'Selected College'}`}
+        subtitle="Imports student records into roster and provisions student login accounts"
         maxWidth="max-w-xl"
       >
         <form onSubmit={handleBulkImport} className="space-y-4 text-xs">
@@ -523,218 +721,57 @@ export default function StudentsPage() {
             <Button variant="ghost" onClick={() => setIsImportModalOpen(false)}>
               Cancel
             </Button>
-            <Button
-              type="submit"
-              variant="success"
-              isLoading={importing}
-              icon={Check}
-            >
+            <Button type="submit" variant="success" isLoading={importing} icon={Check}>
               Confirm & Import Records
             </Button>
           </div>
         </form>
       </Modal>
 
-      {/* Modal 3: Student Profile & Academic Documents View */}
+      {/* Modal 4: Student Certificates View */}
       <Modal
-        isOpen={!!selectedStudent}
-        onClose={() => setSelectedStudent(null)}
-        title={selectedStudent ? selectedStudent.name : ''}
-        subtitle={selectedStudent ? `${selectedStudent.registerNumber} • ${selectedStudent.degree} (${selectedStudent.batch})` : ''}
-        maxWidth="max-w-4xl"
+        isOpen={isCertificatesModalOpen}
+        onClose={() => setIsCertificatesModalOpen(false)}
+        title={selectedStudent ? `Certificates for ${selectedStudent.name}` : ''}
+        subtitle={selectedStudent ? `Student ID: ${selectedStudent.registerNumber} • ${selectedStudent.degree}` : ''}
+        maxWidth="max-w-3xl"
       >
-        {selectedStudent && (
-          <div className="space-y-5 text-xs">
-            {/* Action Bar */}
-            <div className="flex items-center justify-between bg-slate-50 p-3.5 rounded-xl border border-slate-200">
-              <div className="text-slate-600">
-                <span className="font-semibold text-slate-900">Institution: </span>
-                {selectedStudent.institution || 'ABC Engineering College'}
-              </div>
-              <Button
-                variant="success"
-                size="sm"
-                icon={Upload}
-                onClick={() => setIsUploadModalOpen(true)}
-              >
-                Upload Academic Document
-              </Button>
-            </div>
-
-            {/* Verification Metadata Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-1">
-                <div className="text-[11px] text-slate-500 uppercase tracking-wider font-semibold">Academic Record ID</div>
-                <div className="font-mono text-sm text-indigo-600 font-bold">
-                  {selectedStudent.academicRecordId || 'Not Generated Yet'}
+        <div className="space-y-4 text-xs">
+          {loadingCerts ? (
+            <div className="p-8 text-center text-slate-500">Loading student certificates...</div>
+          ) : studentCerts.length > 0 ? (
+            <div className="divide-y divide-slate-100 bg-white rounded-xl border border-slate-200 overflow-hidden">
+              {studentCerts.map((cert) => (
+                <div key={cert._id} className="p-4 flex items-center justify-between gap-3 hover:bg-slate-50 transition">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-slate-900">{cert.certificateType || 'Degree Certificate'}</span>
+                      <Badge variant={cert.status === 'VERIFIED' ? 'emerald' : cert.status === 'REVOKED' ? 'rose' : 'amber'}>
+                        {cert.status}
+                      </Badge>
+                    </div>
+                    <div className="font-mono text-xs text-indigo-600 font-bold mt-1">{cert.certificateId}</div>
+                    <div className="text-[11px] text-slate-500 mt-0.5">Issued Date: {cert.completionDate || 'N/A'}</div>
+                  </div>
+                  <a
+                    href={`/verify/${cert.certificateId}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <Button variant="outline" size="sm" icon={ExternalLink}>
+                      Verify Link
+                    </Button>
+                  </a>
                 </div>
-              </div>
-
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-1">
-                <div className="text-[11px] text-slate-500 uppercase tracking-wider font-semibold">Calculated Merkle Root</div>
-                <div className="font-mono text-xs text-emerald-600 truncate font-semibold">
-                  {selectedStudent.merkleRoot || 'No documents hashed'}
-                </div>
-              </div>
-
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center justify-between">
-                <div>
-                  <div className="text-[11px] text-slate-500 uppercase tracking-wider font-semibold">Public QR Verifier</div>
-                  {selectedStudent.academicRecordId ? (
-                    <a
-                      href={`/verify/${selectedStudent.academicRecordId}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-xs text-indigo-600 hover:underline flex items-center gap-1 mt-1 font-semibold"
-                    >
-                      <ExternalLink className="w-3.5 h-3.5" />
-                      Verify Record
-                    </a>
-                  ) : (
-                    <div className="text-xs text-slate-400 italic">Pending upload</div>
-                  )}
-                </div>
-                <QrCode className="w-8 h-8 text-indigo-500 opacity-80" />
-              </div>
+              ))}
             </div>
-
-            {/* Academic Documents Datatable */}
-            <div className="space-y-3">
-              <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                <FileText className="w-4 h-4 text-indigo-600" />
-                Academic Documents & IPFS Storage ({studentDocs.length})
-              </h4>
-
-              <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
-                    <tr>
-                      <th className="p-3 pl-4">Document Type</th>
-                      <th className="p-3">Semester</th>
-                      <th className="p-3">IPFS CID</th>
-                      <th className="p-3">SHA-256 Hash</th>
-                      <th className="p-3">Status</th>
-                      <th className="p-3 pr-4 text-right">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
-                    {loadingDocs ? (
-                      <tr><td colSpan="6" className="text-center p-6 text-slate-500">Loading documents...</td></tr>
-                    ) : studentDocs.length > 0 ? (
-                      studentDocs.map((doc) => (
-                        <tr key={doc._id} className="hover:bg-slate-50 transition">
-                          <td className="p-3 pl-4 font-bold text-slate-900">{doc.documentType}</td>
-                          <td className="p-3 text-slate-500">{doc.semester}</td>
-                          <td className="p-3 font-mono text-[11px] text-teal-700">
-                            <span className="bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
-                              {doc.ipfsCid.slice(0, 14)}...{doc.ipfsCid.slice(-6)}
-                            </span>
-                          </td>
-                          <td className="p-3 font-mono text-[11px] text-indigo-600">
-                            {doc.documentHash.slice(0, 10)}...{doc.documentHash.slice(-6)}
-                          </td>
-                          <td className="p-3">
-                            <Badge variant="emerald" icon={CheckCircle}>
-                              IPFS Stored
-                            </Badge>
-                          </td>
-                          <td className="p-3 pr-4 text-right">
-                            <a
-                              href={doc.ipfsUrl || `/api/documents/ipfs/${doc.ipfsCid}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center gap-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[11px] px-2.5 py-1 rounded-lg border border-indigo-200 transition font-semibold"
-                            >
-                              <ExternalLink className="w-3 h-3" />
-                              View
-                            </a>
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan="6" className="text-center p-8 text-slate-400">
-                          No documents uploaded yet. Click "Upload Academic Document" to add semester marksheets or degree certificate.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-      </Modal>
-
-      {/* Modal 4: Document Upload Modal */}
-      <Modal
-        isOpen={isUploadModalOpen && !!selectedStudent}
-        onClose={() => { setIsUploadModalOpen(false); setUploadMessage(null); }}
-        title="Upload Academic Document to IPFS"
-        subtitle={selectedStudent ? `Student: ${selectedStudent.name} (${selectedStudent.registerNumber})` : ''}
-      >
-        <form onSubmit={handleDocumentUpload} className="space-y-4 text-xs">
-          {uploadMessage && (
-            <div className={`p-3 rounded-xl border text-xs font-semibold ${uploadMessage.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-rose-50 border-rose-200 text-rose-800'}`}>
-              {uploadMessage.text}
-            </div>
-          )}
-
-          <Select
-            label="Document Type"
-            value={uploadForm.documentType}
-            onChange={(e) => setUploadForm({ ...uploadForm, documentType: e.target.value })}
-            options={['Semester Marksheet', 'Final Degree Certificate']}
-          />
-
-          {uploadForm.documentType === 'Semester Marksheet' && (
-            <Select
-              label="Semester"
-              value={uploadForm.semester}
-              onChange={(e) => setUploadForm({ ...uploadForm, semester: e.target.value })}
-              options={[
-                'Semester 1',
-                'Semester 2',
-                'Semester 3',
-                'Semester 4',
-                'Semester 5',
-                'Semester 6',
-                'Semester 7',
-                'Semester 8',
-              ]}
+          ) : (
+            <EmptyState
+              title="No Certificates Issued Yet"
+              description="No degree certificates or marksheets have been issued to this student yet."
             />
           )}
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-              Select Document File (PDF / Image) <span className="text-rose-500">*</span>
-            </label>
-            <input
-              type="file"
-              accept=".pdf,.jpg,.jpeg,.png"
-              onChange={(e) => setUploadForm({ ...uploadForm, file: e.target.files[0] })}
-              className="w-full bg-white border border-slate-300 rounded-xl p-2 text-slate-700 text-xs focus:outline-none file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white"
-              required
-            />
-          </div>
-
-          <div className="pt-2 flex justify-end gap-2">
-            <Button
-              variant="ghost"
-              onClick={() => { setIsUploadModalOpen(false); setUploadMessage(null); }}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              variant="success"
-              isLoading={uploading}
-              icon={Upload}
-            >
-              Upload to IPFS & Hash
-            </Button>
-          </div>
-        </form>
+        </div>
       </Modal>
     </div>
   );

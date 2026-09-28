@@ -3,6 +3,7 @@ import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
 import StatusBadge from '../components/StatusBadge';
 import QRModal from '../components/QRModal';
+import Modal from '../components/ui/Modal';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import EmptyState from '../components/ui/EmptyState';
@@ -17,15 +18,18 @@ import {
   Check,
   ShieldCheck,
   Building,
-  Layers,
-  BookOpen,
   Eye,
+  ExternalLink,
+  FileText,
 } from 'lucide-react';
 
 export default function StudentDashboard() {
   const { user } = useAuth();
   const [certificates, setCertificates] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Active Certificate Modal State
+  const [viewingCert, setViewingCert] = useState(null);
   const [selectedQrCertId, setSelectedQrCertId] = useState(null);
   const [copiedId, setCopiedId] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -48,11 +52,13 @@ export default function StudentDashboard() {
     }
   };
 
-  const handleCopyLink = (certId) => {
+  const handleShareVerificationLink = (certId) => {
     const url = `${window.location.origin}/verify/${certId}`;
-    navigator.clipboard.writeText(url);
-    setCopiedId(certId);
-    setTimeout(() => setCopiedId(null), 2000);
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url);
+      setCopiedId(certId);
+      setTimeout(() => setCopiedId(null), 2000);
+    }
   };
 
   const studentRef = user?.studentRef || {};
@@ -65,40 +71,46 @@ export default function StudentDashboard() {
         <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
         <main className="flex-1 p-4 sm:p-6 max-w-6xl mx-auto w-full space-y-6 overflow-x-hidden">
-          {/* Student Profile Banner */}
-          <div className="bg-slate-900 text-white rounded-2xl p-5 sm:p-8 border border-slate-800 shadow-lg">
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+          {/* Welcome Student Banner */}
+          <div className="bg-slate-900 text-white rounded-2xl p-6 sm:p-8 border border-slate-800 shadow-lg">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-2xl bg-indigo-600/30 text-indigo-300 flex items-center justify-center border border-indigo-500/40 text-2xl font-black shrink-0">
                   {user ? user.name.charAt(0) : 'S'}
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h1 className="text-2xl font-black text-white">{user?.name || 'Student Name'}</h1>
+                    <h1 className="text-2xl font-black text-white">Welcome, {user?.name || 'Student'}</h1>
                     <Badge variant="emerald" icon={ShieldCheck}>Verified Student</Badge>
                   </div>
-                  <p className="text-xs text-indigo-300 font-mono mt-0.5">
-                    Register No: {studentRef.registerNumber || user?.studentId || '23CSE001'}
+                  <p className="text-xs text-indigo-300 font-mono mt-1">
+                    Student ID: {studentRef.registerNumber || studentRef.studentId || user?.email}
                   </p>
                 </div>
               </div>
 
-              {/* Profile Overview Details */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 w-full md:w-auto text-xs bg-slate-800/80 p-3.5 rounded-xl border border-slate-700/60">
+              {/* Student Information Summary Card */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full md:w-auto text-xs bg-slate-800/80 p-4 rounded-xl border border-slate-700/60">
                 <div>
-                  <span className="text-[10px] text-slate-400 font-semibold block uppercase">Institution</span>
-                  <span className="font-bold text-white truncate block mt-0.5">
-                    {studentRef.institution || 'Anna University'}
+                  <span className="text-[10px] text-slate-400 font-bold block uppercase">College</span>
+                  <span className="font-bold text-white truncate block mt-0.5 max-w-[140px]">
+                    {studentRef.institution || 'ABC Engineering College'}
                   </span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-400 font-semibold block uppercase">Department</span>
-                  <span className="font-bold text-white truncate block mt-0.5">
+                  <span className="text-[10px] text-slate-400 font-bold block uppercase">Department</span>
+                  <span className="font-bold text-white truncate block mt-0.5 max-w-[130px]">
                     {studentRef.department || 'Computer Science'}
                   </span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-400 font-semibold block uppercase">Batch</span>
+                  <span className="text-[10px] text-slate-400 font-bold block uppercase">Course</span>
+                  <span className="font-bold text-white truncate block mt-0.5 max-w-[140px]">
+                    {studentRef.degree || 'B.E Computer Science'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 font-bold block uppercase">Batch</span>
                   <span className="font-bold text-white truncate block mt-0.5">
                     {studentRef.batch || '2023-2027'}
                   </span>
@@ -107,21 +119,21 @@ export default function StudentDashboard() {
             </div>
           </div>
 
-          {/* Academic Credentials Section */}
+          {/* My Certificates Section */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-black text-slate-900">My Certificates & Marksheets</h2>
-                <p className="text-xs text-slate-500">Official verified degree certificates and semester marksheets</p>
+                <h2 className="text-xl font-black text-slate-900">My Certificates</h2>
+                <p className="text-xs text-slate-500">Official verified degree certificates and institutional credentials</p>
               </div>
               <Badge variant="indigo" icon={Award}>
-                {certificates.length} Total Credentials
+                {certificates.length} Issued Credentials
               </Badge>
             </div>
 
             {loading ? (
               <div className="p-12 text-center text-slate-500 text-xs bg-white rounded-2xl border border-slate-200">
-                Loading academic credentials...
+                Loading my certificates...
               </div>
             ) : certificates.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
@@ -139,50 +151,49 @@ export default function StudentDashboard() {
                       </div>
 
                       <h3 className="font-black text-slate-900 text-base">
-                        {cert.course ? (cert.course.courseName || cert.course.name) : 'Degree Certificate'}
+                        {cert.certificateType || (cert.course ? cert.course.name : 'Degree Certificate')}
                       </h3>
 
                       <div className="text-xs text-slate-600 mt-2 space-y-1 font-medium">
-                        <div>Type: <span className="font-bold text-slate-900">{cert.documentType || 'Semester Marksheet'}</span></div>
-                        <div>Issued Date: <span className="font-bold text-slate-900">{cert.completionDate || new Date().toLocaleDateString()}</span></div>
-                        <div>Institution: <span className="font-bold text-slate-900">{cert.institutionId || 'Anna University'}</span></div>
+                        <div>Issue Date: <span className="font-bold text-slate-900">{cert.completionDate || new Date().toLocaleDateString()}</span></div>
+                        <div>College: <span className="font-bold text-slate-900">{cert.institutionId || studentRef.institution || 'College of Engineering Guindy'}</span></div>
+                        <div>Status: <span className="font-bold text-emerald-600">Issued & Verified</span></div>
                       </div>
                     </div>
 
-                    <div className="pt-3 border-t border-slate-100 flex items-center gap-2">
+                    {/* Actions: View, Download, QR / Share */}
+                    <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center gap-2">
                       <Button
-                        variant="outline"
+                        variant="primary"
                         size="sm"
-                        className="flex-1"
-                        icon={QrCode}
-                        onClick={() => setSelectedQrCertId(cert.certificateId)}
+                        icon={Eye}
+                        onClick={() => setViewingCert(cert)}
                       >
-                        Show QR
+                        View
                       </Button>
 
                       <a
-                        href={`/verify/${cert.certificateId}`}
+                        href={cert.pdfUrl || `/api/documents/pdf/${cert.certificateId}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="flex-1"
                       >
                         <Button
-                          variant="primary"
+                          variant="outline"
                           size="sm"
-                          className="w-full"
-                          icon={Eye}
+                          icon={Download}
                         >
-                          View
+                          Download
                         </Button>
                       </a>
 
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
-                        icon={copiedId === cert.certificateId ? Check : Share2}
-                        onClick={() => handleCopyLink(cert.certificateId)}
-                        title="Share Verification Link"
-                      />
+                        icon={QrCode}
+                        onClick={() => setSelectedQrCertId(cert.certificateId)}
+                      >
+                        QR / Share
+                      </Button>
                     </div>
                   </div>
                 ))}
@@ -191,13 +202,116 @@ export default function StudentDashboard() {
               <div className="bg-white rounded-2xl p-8 border border-slate-200">
                 <EmptyState
                   title="No Certificates Issued Yet"
-                  description="Your institution has not issued any degree certificates or consolidated marksheets to your account yet."
+                  description="Your institution has not issued any degree certificates or marksheets to your account yet."
                 />
               </div>
             )}
           </div>
         </main>
       </div>
+
+      {/* Student Certificate View Modal (Clean College View, No Raw Technical Blockchain Hashes) */}
+      <Modal
+        isOpen={Boolean(viewingCert)}
+        onClose={() => setViewingCert(null)}
+        title="Student Certificate Details"
+        subtitle={viewingCert ? `Certificate ID: ${viewingCert.certificateId}` : ''}
+        maxWidth="max-w-xl"
+      >
+        {viewingCert && (
+          <div className="space-y-5 text-xs">
+            <div className="bg-indigo-50 border border-indigo-100 p-4 rounded-xl flex items-center justify-between">
+              <div>
+                <div className="text-[10px] uppercase font-bold text-indigo-600">Certificate Status</div>
+                <div className="text-sm font-black text-slate-900 mt-0.5">{viewingCert.status || 'VERIFIED'}</div>
+              </div>
+              <StatusBadge status={viewingCert.status} />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+              <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                <span className="text-[10px] text-slate-400 font-bold uppercase block">Certificate Type</span>
+                <span className="font-bold text-slate-900 mt-1 block">{viewingCert.certificateType || 'Degree Certificate'}</span>
+              </div>
+
+              <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                <span className="text-[10px] text-slate-400 font-bold uppercase block">Certificate ID</span>
+                <span className="font-mono font-bold text-indigo-600 mt-1 block">{viewingCert.certificateId}</span>
+              </div>
+
+              <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                <span className="text-[10px] text-slate-400 font-bold uppercase block">Student Name</span>
+                <span className="font-bold text-slate-900 mt-1 block">{user?.name}</span>
+              </div>
+
+              <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                <span className="text-[10px] text-slate-400 font-bold uppercase block">Student ID / Register No</span>
+                <span className="font-mono font-bold text-slate-800 mt-1 block">{studentRef.registerNumber || studentRef.studentId || user?.email}</span>
+              </div>
+
+              <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                <span className="text-[10px] text-slate-400 font-bold uppercase block">Course</span>
+                <span className="font-bold text-slate-900 mt-1 block">{studentRef.degree || (viewingCert.course ? viewingCert.course.name : 'B.E Computer Science')}</span>
+              </div>
+
+              <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                <span className="text-[10px] text-slate-400 font-bold uppercase block">Batch</span>
+                <span className="font-bold text-slate-800 mt-1 block">{studentRef.batch || '2023-2027'}</span>
+              </div>
+
+              <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 sm:col-span-2">
+                <span className="text-[10px] text-slate-400 font-bold uppercase block">Issue Date</span>
+                <span className="font-bold text-slate-800 mt-1 block">{viewingCert.completionDate || new Date().toLocaleDateString()}</span>
+              </div>
+            </div>
+
+            {/* Actions inside Modal */}
+            <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center gap-2">
+              <a
+                href={viewingCert.pdfUrl || `/api/documents/pdf/${viewingCert.certificateId}`}
+                target="_blank"
+                rel="noreferrer"
+                className="flex-1"
+              >
+                <Button variant="primary" size="md" className="w-full" icon={Eye}>
+                  View Certificate PDF
+                </Button>
+              </a>
+
+              <a
+                href={viewingCert.pdfUrl || `/api/documents/pdf/${viewingCert.certificateId}`}
+                download
+                className="flex-1"
+              >
+                <Button variant="outline" size="md" className="w-full" icon={Download}>
+                  Download PDF
+                </Button>
+              </a>
+
+              <Button
+                variant="outline"
+                size="md"
+                icon={QrCode}
+                onClick={() => {
+                  setSelectedQrCertId(viewingCert.certificateId);
+                  setViewingCert(null);
+                }}
+              >
+                Show QR
+              </Button>
+
+              <Button
+                variant="success"
+                size="md"
+                icon={copiedId === viewingCert.certificateId ? Check : Share2}
+                onClick={() => handleShareVerificationLink(viewingCert.certificateId)}
+              >
+                {copiedId === viewingCert.certificateId ? 'Link Copied' : 'Share Verification Link'}
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
 
       <QRModal
         certificateId={selectedQrCertId}

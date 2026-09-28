@@ -4,10 +4,10 @@ import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
-import { Lock, Mail, Shield, AlertCircle, ArrowRight } from 'lucide-react';
+import { Lock, User, Shield, AlertCircle, ArrowRight } from 'lucide-react';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -19,20 +19,16 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
 
-    if (!email || !password) {
-      setError('Please enter your email address and password');
+    if (!identifier.trim() || !password) {
+      setError('Please enter your Student ID / Email address and password');
       return;
     }
 
     setLoading(true);
 
     try {
-      const user = await login({ email, password });
-      if (user.role === 'super_admin') {
-        navigate('/admin/colleges');
-      } else if (user.role === 'college_admin' || user.role === 'admin') {
-        navigate('/admin/dashboard');
-      } else if (user.role === 'student') {
+      const user = await login({ email: identifier.trim(), password });
+      if (user && user.role === 'student') {
         navigate('/student/dashboard');
       } else {
         navigate('/admin/dashboard');
@@ -55,9 +51,9 @@ export default function LoginPage() {
             <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center mx-auto">
               <Shield className="w-6 h-6" />
             </div>
-            <h1 className="text-2xl font-black text-slate-900">BlockCert Portal Sign In</h1>
-            <p className="text-xs text-slate-500">
-              Blockchain-Based Academic Credential Verification
+            <h1 className="text-2xl font-black text-slate-900">BLOCKCERT</h1>
+            <p className="text-xs font-bold text-indigo-600 tracking-wider uppercase">
+              Certificate Management & Verification Platform
             </p>
           </div>
 
@@ -70,12 +66,12 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
-              label="Email Address"
-              type="email"
-              icon={Mail}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="name@university.edu"
+              label="Student ID / Email Address"
+              type="text"
+              icon={User}
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
+              placeholder="Enter Student ID (e.g. 23CSE001) or Email address..."
               required
             />
 
@@ -105,14 +101,14 @@ export default function LoginPage() {
               iconPosition="right"
               className="w-full mt-2"
             >
-              Sign In to Account
+              Log In
             </Button>
           </form>
 
           <div className="pt-4 border-t border-slate-100 text-center text-xs text-slate-500">
             Don't have an account yet?{' '}
             <Link to="/register" className="text-indigo-600 hover:underline font-bold">
-              Register Account
+              Register Institution Account
             </Link>
           </div>
         </div>

@@ -6,6 +6,7 @@ const {
   createStudent,
   importStudentsCsv,
   updateStudent,
+  updateSelfProfile,
   deleteStudent,
 } = require("../controllers/studentController");
 const { protect } = require("../middleware/authMiddleware");
@@ -13,6 +14,7 @@ const { protect } = require("../middleware/authMiddleware");
 router.use(protect);
 
 router.post("/import", importStudentsCsv);
+router.put("/profile/me", updateSelfProfile);
 
 router
   .route("/")
