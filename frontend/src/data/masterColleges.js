@@ -14,3 +14,7 @@ export const MASTER_COLLEGES = [
   { id: "COL-VCET", code: "7335", name: "Velalar College of Engineering and Technology", district: "Erode", searchTerms: "Velalar VCET Thindal Erode" },
   { id: "COL-HCE", code: "7338", name: "Hindusthan College of Engineering, Chennimalai/Ingur", district: "Erode", searchTerms: "Hindusthan Chennimalai Ingur HCE Erode" },
 ];
+
+export const masterColleges = MASTER_COLLEGES;
+export default MASTER_COLLEGES;
+
